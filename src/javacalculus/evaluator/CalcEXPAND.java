@@ -24,7 +24,7 @@ public class CalcEXPAND implements CalcFunctionEvaluator {
                 return expand(obj);
             }
         } else {
-            throw new CalcWrongParametersException("INT -> wrong number of parameters");
+            throw new CalcWrongParametersException("EXPAND -> wrong number of parameters");
         }
     }
 

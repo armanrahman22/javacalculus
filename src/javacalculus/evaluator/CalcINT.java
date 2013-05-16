@@ -1,41 +1,45 @@
 /**
- * 
+ *
  */
 package javacalculus.evaluator;
 
 import javacalculus.core.CALC;
+import javacalculus.core.CalcParser;
 import javacalculus.evaluator.extend.CalcFunctionEvaluator;
 import javacalculus.exception.CalcWrongParametersException;
 import javacalculus.struct.*;
 
 /**
- * This function evaluator applies the integral operator to a function with respect to
- * a given variable. An optional "order" parameter is built in to take multiple integrals
- * with respect to the same variable.
- * @author Duyun Chen <A HREF="mailto:duchen@seas.upenn.edu">[duchen@seas.upenn.edu]</A>,
- * Seth Shannin <A HREF="mailto:sshannin@seas.upenn.edu">[sshannin@seas.upenn.edu]</A>
- *  
+ * This function evaluator applies the Integral operator to a function with
+ * respect to a given variable.
  *
+ * @author Duyun Chen <A
+ * HREF="mailto:duchen@seas.upenn.edu">[duchen@seas.upenn.edu]</A>, Seth Shannin
+ * <A HREF="mailto:sshannin@seas.upenn.edu">[sshannin@seas.upenn.edu]</A>
+ *
+ * @author Seva Luchianov
  */
+
 public class CalcINT implements CalcFunctionEvaluator {
 
-	/**
-	 * 
-	 */
-	public CalcINT() {}
-	
-	@Override
-	public CalcObject evaluate(CalcFunction function) {
-		if (function.size() == 2) {	//case INT(function, variable)
-			if (function.get(1) instanceof CalcSymbol) {	//evaluate, adding an arbitrary constant for good practice
-				return CALC.ADD.createFunction(integrate(function.get(0), (CalcSymbol)function.get(1)), new CalcSymbol("C"));
-			}
-			else throw new CalcWrongParametersException("INT -> 2nd parameter syntax");
-		}
-		else throw new CalcWrongParametersException("INT -> wrong number of parameters");
-	}
-	
-	public CalcObject integrate(CalcObject obj, CalcSymbol var) {
+    public CalcINT() {
+    }
+
+    @Override
+    public CalcObject evaluate(CalcFunction function) {
+        if (function.size() == 2) {	//case INT(function, variable)
+            if (function.get(1) instanceof CalcSymbol) {	//evaluate, adding an arbitrary constant for good practice
+                //return CALC.ADD.createFunction(integrate(function.get(0), (CalcSymbol) function.get(1)), new CalcSymbol("C"));
+                return CALC.ADD.createFunction(integrate(function.get(0), (CalcSymbol) function.get(1)));
+            } else {
+                throw new CalcWrongParametersException("INT -> 2nd parameter syntax");
+            }
+        } else {
+            throw new CalcWrongParametersException("INT -> wrong number of parameters");
+        }
+    }
+
+    public CalcObject integrate(CalcObject obj, CalcSymbol var) {
         if (obj instanceof CalcFunction) { //input f(x..xn)
             obj = CALC.SYM_EVAL(obj); //evaluate the function before attempting integration
         }
@@ -59,53 +63,56 @@ public class CalcINT implements CalcFunctionEvaluator {
             } else { //	INT(f(x)*g(x),x) = ?? (u-sub)
                 //f(g(x)) = f'(g(x))*g'(x)
                 //Lets try to handle g'(x)*f(g(x))
-                //CalcFunction functionB = new CalcFunction(CALC.MULTIPLY, function, 1, function.size());
-                //System.out.println("We are in the f*g branch");
-                System.out.println(CALC.SYM_EVAL(function));
                 CalcObject secondObj = CALC.SYM_EVAL(function.get(1));
-                if (secondObj.getHeader().equals(CALC.POWER)) {
-                    //System.out.println("secondObj is pwd");
-                    CalcObject inOfFunc = ((CalcFunction) secondObj).get(0);
-                    CalcObject diffSecond = CALC.SYM_EVAL(CALC.DIFF.createFunction(inOfFunc, var));
+                CalcObject inOfFunc = null;
+                CalcObject diffSecond;
+                CalcObject checkU = null;
+                CalcObject toBeInt = null;
+                if (secondObj.getHeader().equals(CALC.POWER)) {//f'(x)*(f(x))^k
+                    inOfFunc = ((CalcFunction) secondObj).get(0);
+                    diffSecond = CALC.SYM_EVAL(CALC.DIFF.createFunction(inOfFunc, var));
                     CalcObject power = ((CalcFunction) secondObj).get(1);
-                    //System.out.println("diffSecond " + diffSecond);
-                    //CalcObject checkU = CALC.SYM_EVAL(CALC.DIVIDE.createFunction(firstObj, diffSecond));
-                    CalcObject checkU = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(firstObj, CALC.POWER.createFunction(diffSecond, CALC.NEG_ONE)));
-                    //System.out.println("U: " + checkU);
-                    if (checkU.isNumber()) {
-                        //System.out.println("LETS GO " + diffSecond);
-                        CalcObject toBeInt = CALC.SYM_EVAL(CALC.POWER.createFunction(var, power));
-                        //System.out.println("tobeint " + toBeInt);
-                        CalcObject result = ((CalcFunction) integrate(toBeInt, var));
-                        while (((CalcFunction) result).getVariableIndex(var) != -1) {
-                            ((CalcFunction) result).set(((CalcFunction) result).getVariableIndex(var), inOfFunc);
-                        }
-                        return result;
-                    }
-                }
-                if (firstObj.getHeader().equals(CALC.POWER)) {
-                    //System.out.println("firstObj is pwd");
-                    CalcObject inOfFunc = ((CalcFunction) firstObj).get(0);
-                    CalcObject diffFirst = CALC.SYM_EVAL(CALC.DIFF.createFunction(inOfFunc, var));
+                    checkU = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(firstObj, CALC.POWER.createFunction(diffSecond, CALC.NEG_ONE)));
+                    toBeInt = CALC.SYM_EVAL(CALC.POWER.createFunction(var, power));
+                } else if (secondObj.getHeader().equals(CALC.SIN)) {//f'(x)*sin(f(x))
+                    inOfFunc = ((CalcFunction) secondObj).get(0);
+                    diffSecond = CALC.SYM_EVAL(CALC.DIFF.createFunction(inOfFunc, var));
+                    checkU = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(firstObj, CALC.POWER.createFunction(diffSecond, CALC.NEG_ONE)));
+                    toBeInt = CALC.SYM_EVAL(CALC.SIN.createFunction(var));
+                } else if (secondObj.getHeader().equals(CALC.COS)) {//f'(x)*cos(f(x))
+                    inOfFunc = ((CalcFunction) secondObj).get(0);
+                    diffSecond = CALC.SYM_EVAL(CALC.DIFF.createFunction(inOfFunc, var));
+                    checkU = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(firstObj, CALC.POWER.createFunction(diffSecond, CALC.NEG_ONE)));
+                    toBeInt = CALC.SYM_EVAL(CALC.COS.createFunction(var));
+                } else if (firstObj.getHeader().equals(CALC.POWER)) {
+                    inOfFunc = ((CalcFunction) firstObj).get(0);
+                    diffSecond = CALC.SYM_EVAL(CALC.DIFF.createFunction(inOfFunc, var));
                     CalcObject power = ((CalcFunction) firstObj).get(1);
-                    //System.out.println("diffFirst " + diffFirst);
-                    //CalcObject checkU = CALC.SYM_EVAL(CALC.DIVIDE.createFunction(secondObj, diffFirst));
-                    //CalcObject checkU = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(secondObj, CALC.POWER.createFunction(diffFirst, CALC.NEG_ONE)));
-                    System.out.println("U: " + checkU);
-                    if (checkU.isNumber()) {
-                        //System.out.println("LETS GO " + diffFirst);
-                        CalcObject toBeInt = CALC.SYM_EVAL(CALC.POWER.createFunction(var, power));
-                        //System.out.println("tobeint " + toBeInt);
-                        CalcObject result = ((CalcFunction) integrate(toBeInt, var));
-                        while (((CalcFunction) result).getVariableIndex(var) != -1) {
-                            ((CalcFunction) result).set(((CalcFunction) result).getVariableIndex(var), inOfFunc);
-                        }
-                        return result;
+                    checkU = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(secondObj, CALC.POWER.createFunction(diffSecond, CALC.NEG_ONE)));
+                    toBeInt = CALC.SYM_EVAL(CALC.POWER.createFunction(var, power));
+                } else if (firstObj.getHeader().equals(CALC.SIN)) {//f'(x)*sin(f(x))
+                    inOfFunc = ((CalcFunction) firstObj).get(0);
+                    diffSecond = CALC.SYM_EVAL(CALC.DIFF.createFunction(inOfFunc, var));
+                    checkU = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(secondObj, CALC.POWER.createFunction(diffSecond, CALC.NEG_ONE)));
+                    toBeInt = CALC.SYM_EVAL(CALC.SIN.createFunction(var));
+                } else if (secondObj.getHeader().equals(CALC.COS)) {//f'(x)*cos(f(x))
+                    inOfFunc = ((CalcFunction) secondObj).get(0);
+                    diffSecond = CALC.SYM_EVAL(CALC.DIFF.createFunction(inOfFunc, var));
+                    checkU = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(firstObj, CALC.POWER.createFunction(diffSecond, CALC.NEG_ONE)));
+                    toBeInt = CALC.SYM_EVAL(CALC.COS.createFunction(var));
+                }
+                if (checkU != null && checkU.isNumber()) {
+                    CalcObject result = ((CalcFunction) integrate(toBeInt, var));
+                    String resultString = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(checkU, result)).toString().replaceAll(var.toString(), "(" + inOfFunc.toString() + ")");
+                    CalcParser parser = new CalcParser();
+                    try {
+                        return CALC.SYM_EVAL(parser.parse(resultString));
+                    } catch (Exception e) {
+                        return null;
                     }
                 }
-                //try f(x) == g'(x)
-                //return null;
-                return obj; //TODO implement reverse chain rule (u-sub)?? Very tricky.
+                return null;
+                //return obj; //TODO implement reverse chain rule (u-sub)?? Very tricky.
             }
         }
         if (obj.getHeader().equals(CALC.POWER)) { //this part is probably trickiest (form f(x)^g(x)). A lot of integrals here does not evaluate into elementary functions
@@ -164,7 +171,7 @@ public class CalcINT implements CalcFunctionEvaluator {
                         CALC.ABS.createFunction(var));
             }
         }
-        //return null;
-        return CALC.INT.createFunction(obj, var); //don't know how to integrate (yet). Return original expression.
+        return null;
+        //return CALC.INT.createFunction(obj, var); //don't know how to integrate (yet). Return original expression.
     }
 }

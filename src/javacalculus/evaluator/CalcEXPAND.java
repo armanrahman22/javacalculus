@@ -10,6 +10,12 @@ import javacalculus.struct.CalcInteger;
 import javacalculus.struct.CalcObject;
 import javacalculus.struct.CalcSymbol;
 
+/**
+ * This function evaluator applies the Expand operator to a function.
+
+ * @author Seva Luchianov
+ */
+
 public class CalcEXPAND implements CalcFunctionEvaluator {
 
     @Override
@@ -54,7 +60,7 @@ public class CalcEXPAND implements CalcFunctionEvaluator {
                 while (iter.hasNext()) {
                     resultFunc.add(CALC.SYM_EVAL(CALC.EXPAND.createFunction(CALC.MULTIPLY.createFunction((CalcObject) iter.next(), firstObj))));
                 }
-                System.err.println(resultFunc);
+                //System.err.println(resultFunc);
                 for (CalcObject temp : resultFunc) {
                     factored = CALC.SYM_EVAL(CALC.ADD.createFunction(factored, temp));
                 }
@@ -100,7 +106,7 @@ public class CalcEXPAND implements CalcFunctionEvaluator {
                 while (iter.hasNext()) {
                     resultFunc.add(CALC.SYM_EVAL(CALC.EXPAND.createFunction(CALC.MULTIPLY.createFunction((CalcObject) iter.next(), secondObj))));
                 }
-                System.err.println(resultFunc);
+                //System.err.println(resultFunc);
                 for (CalcObject temp : resultFunc) {
                     factored = CALC.SYM_EVAL(CALC.ADD.createFunction(factored, temp));
                 }
@@ -115,7 +121,7 @@ public class CalcEXPAND implements CalcFunctionEvaluator {
                 while (iter.hasNext()) {
                     resultFunc.add(CALC.SYM_EVAL(CALC.EXPAND.createFunction(CALC.MULTIPLY.createFunction((CalcObject) iter.next(), firstObj))));
                 }
-                System.err.println(resultFunc);
+                //System.err.println(resultFunc);
                 for (CalcObject temp : resultFunc) {
                     factored = CALC.SYM_EVAL(CALC.ADD.createFunction(factored, temp));
                 }

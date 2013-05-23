@@ -12,10 +12,9 @@ import javacalculus.struct.CalcSymbol;
 
 /**
  * This function evaluator applies the Expand operator to a function.
-
+ *
  * @author Seva Luchianov
  */
-
 public class CalcEXPAND implements CalcFunctionEvaluator {
 
     @Override
@@ -53,12 +52,16 @@ public class CalcEXPAND implements CalcFunctionEvaluator {
             if (firstObj instanceof CalcFunction && secondObj.isNumber() && secondObj instanceof CalcInteger) {//f(x)^k
                 int pow = ((CalcInteger) secondObj).intValue();
                 //System.out.println("WE ARE IN THE f(x)^k branch");
-                Iterator iter = ((CalcFunction) firstObj).iterator();
                 ArrayList<CalcObject> resultFunc = new ArrayList<>();
                 //System.out.println("This is the first part of the function " + firstObj);
                 //System.out.println("This is the second part of the function " + secondObj);
-                while (iter.hasNext()) {
-                    resultFunc.add(CALC.SYM_EVAL(CALC.EXPAND.createFunction(CALC.MULTIPLY.createFunction((CalcObject) iter.next(), firstObj))));
+                if (firstObj.getHeader().equals(CALC.ADD)) {
+                    Iterator iter = ((CalcFunction) firstObj).iterator();
+                    while (iter.hasNext()) {
+                        resultFunc.add(CALC.SYM_EVAL(CALC.EXPAND.createFunction(CALC.MULTIPLY.createFunction((CalcObject) iter.next(), firstObj))));
+                    }
+                } else {
+                    return obj;
                 }
                 //System.err.println(resultFunc);
                 for (CalcObject temp : resultFunc) {
@@ -67,7 +70,7 @@ public class CalcEXPAND implements CalcFunctionEvaluator {
                 for (int i = 0; i < pow - 2; i++) {
                     factored = CALC.SYM_EVAL(CALC.EXPAND.createFunction(CALC.MULTIPLY.createFunction(firstObj, factored)));
                 }
-                //System.out.println("RESULT of f(x)^k: " + factored + "\n" + CALC.SYM_EVAL(factored));
+                //System.out.println("RESULT of f(x)^k: " + factored);
                 return factored;
             }
         } else if (obj.getHeader().equals(CALC.MULTIPLY)) {

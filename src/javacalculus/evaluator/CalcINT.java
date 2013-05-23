@@ -19,7 +19,6 @@ import javacalculus.struct.*;
  *
  * @author Seva Luchianov
  */
-
 public class CalcINT implements CalcFunctionEvaluator {
 
     public CalcINT() {
@@ -64,10 +63,21 @@ public class CalcINT implements CalcFunctionEvaluator {
                 //f(g(x)) = f'(g(x))*g'(x)
                 //Lets try to handle g'(x)*f(g(x))
                 CalcObject secondObj = CALC.SYM_EVAL(function.get(1));
+                //test to see if it is u*f(u) or f(u)*u
+                int depthFirst = ((CalcInteger) CALC.SYM_EVAL(CALC.DEPTH.createFunction(firstObj))).intValue();
+                int depthSecond = ((CalcInteger) CALC.SYM_EVAL(CALC.DEPTH.createFunction(secondObj))).intValue();
+                //System.out.println(depthFirst);
+                //System.out.println(depthSecond);
+                if (depthSecond < depthFirst) {
+                    CalcObject temp = firstObj;
+                    firstObj = secondObj;
+                    secondObj = temp;
+                }
                 CalcObject inOfFunc = null;
                 CalcObject diffSecond;
                 CalcObject checkU = null;
                 CalcObject toBeInt = null;
+                //System.out.println(secondObj.getHeader());
                 if (secondObj.getHeader().equals(CALC.POWER)) {//f'(x)*(f(x))^k
                     inOfFunc = ((CalcFunction) secondObj).get(0);
                     diffSecond = CALC.SYM_EVAL(CALC.DIFF.createFunction(inOfFunc, var));
@@ -81,9 +91,13 @@ public class CalcINT implements CalcFunctionEvaluator {
                     toBeInt = CALC.SYM_EVAL(CALC.SIN.createFunction(var));
                 } else if (secondObj.getHeader().equals(CALC.COS)) {//f'(x)*cos(f(x))
                     inOfFunc = ((CalcFunction) secondObj).get(0);
+                    //System.out.println(inOfFunc);
                     diffSecond = CALC.SYM_EVAL(CALC.DIFF.createFunction(inOfFunc, var));
+                    //System.out.println(diffSecond);
                     checkU = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(firstObj, CALC.POWER.createFunction(diffSecond, CALC.NEG_ONE)));
+                    //System.out.println(checkU);
                     toBeInt = CALC.SYM_EVAL(CALC.COS.createFunction(var));
+                    //System.out.println(toBeInt);
                 } else if (firstObj.getHeader().equals(CALC.POWER)) {
                     inOfFunc = ((CalcFunction) firstObj).get(0);
                     diffSecond = CALC.SYM_EVAL(CALC.DIFF.createFunction(inOfFunc, var));
@@ -108,11 +122,13 @@ public class CalcINT implements CalcFunctionEvaluator {
                     try {
                         return CALC.SYM_EVAL(parser.parse(resultString));
                     } catch (Exception e) {
-                        return null;
+                        return obj;
+                        //return CALC.INT.createFunction(obj, var);
                     }
                 }
-                return null;
-                //return obj; //TODO implement reverse chain rule (u-sub)?? Very tricky.
+                //return obj;
+                //return CALC.INT.createFunction(obj, var);
+                return obj; //TODO implement reverse chain rule (u-sub)?? Very tricky.
             }
         }
         if (obj.getHeader().equals(CALC.POWER)) { //this part is probably trickiest (form f(x)^g(x)). A lot of integrals here does not evaluate into elementary functions
@@ -171,7 +187,7 @@ public class CalcINT implements CalcFunctionEvaluator {
                         CALC.ABS.createFunction(var));
             }
         }
-        return null;
+        return obj;
         //return CALC.INT.createFunction(obj, var); //don't know how to integrate (yet). Return original expression.
     }
 }

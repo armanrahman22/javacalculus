@@ -1,16 +1,13 @@
-/**
- *
- */
 package javacalculus.evaluator;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import javacalculus.core.CALC;
 import javacalculus.core.CalcParser;
 import javacalculus.evaluator.extend.CalcFunctionEvaluator;
 import javacalculus.exception.CalcWrongParametersException;
 import javacalculus.struct.*;
+import java.util.concurrent.Executors;
 
 /**
  * This function evaluator applies the Integral operator to a function with
@@ -23,11 +20,12 @@ import javacalculus.struct.*;
  * @author Seva Luchianov
  */
 public class CalcINT implements CalcFunctionEvaluator {
-    
-    public boolean intByPartsThreadsAreAlive = true;
+
+    public CalcINTBYPARTS intByPartsCarryOver = null;
 
     public CalcINT() {
     }
+
 
     @Override
     public CalcObject evaluate(CalcFunction function) {
@@ -68,14 +66,6 @@ public class CalcINT implements CalcFunctionEvaluator {
                 return CALC.MULTIPLY.createFunction(function.get(0),
                         integrate(new CalcFunction(CALC.MULTIPLY, function, 1, function.size()), var));
             } else { //	INT(f(x)*g(x),x) = ?? (u-sub)
-
-
-                //TEST
-                //udvPairs[0][1] = CALC.SYM_EVAL(function);
-                //udvPairs[0][2] = CALC.ONE;
-                //udvPairs[432][1] = CALC.ONE;
-                //udvPairs[432][2] = CALC.SYM_EVAL(function);
-                //TEST
                 /*
                  * could be integration by parts
                  * INT(u*dv) = u*v-INT(v*du)
@@ -204,7 +194,7 @@ public class CalcINT implements CalcFunctionEvaluator {
                     } catch (Exception e) {
                         System.err.println("error parsing new function");
                         e.printStackTrace(System.err);
-                        return obj;
+                        return CALC.ERROR;
                         //return CALC.INT.createFunction(obj, var);
                     }
                 }
@@ -225,93 +215,33 @@ public class CalcINT implements CalcFunctionEvaluator {
                  * who care which function is more difficult? this is a computer, simultaniously integrate every possibility until one of them completes.
                  * This avoids the infinite recursion problem.
                  * 6-21-13
+                 * 
+                 * 7-24-13
+                 * Infinite recursion problem is still a thing, threads are generated faster than the program can shut them down. Will need to use thread pools...
+                 * 
+                 * 7-25-13 done :)
+                 * 
+                 * BUT OTHER PROBLEMS...
+                 * 
+                 * INPUT: INT(x*(1+x),x)
+                 * ANSWER: ADD(MULTIPLY(x,ADD(x,MULTIPLY(0.5,POWER(x,2)))),MULTIPLY(-1,ADD(MULTIPLY(0.5,POWER(x,2)),MULTIPLY(0.16666665,POWER(x,3)))))
+                 * OUT: x*(x+0.5*x^2)-(0.5*x^2+0.16666665*x^3)   <------Correct
+                 * INPUT: INT(x*(1+x),x)
+                 * ANSWER: ADD(MULTIPLY(0.5,ADD(1,x),POWER(x,2)),MULTIPLY(-0.16666665,POWER(x,3)))
+                 * OUT: 0.5*(1+x)*x^2-0.16666665*x^3             <------Incorect
+                 * 
+                 * HOW IS THIS HAPPENING
+                 * 
+                 * Best bet is a problem with u sub... gotta note with thoughts
                  */
 
                 //START INTEGRATION BY PARTS
                 //System.out.println("Lets do integration by parts");
                 //secondObj = function.get(1);
                 //System.out.println("FirstObj: " + firstObj);
-                //udvPairs[0][1] = CALC.SYM_EVAL(function);
-                //udvPairs[0][2] = CALC.ONE;
-                //udvPairs[432][1] = CALC.ONE;
-                //udvPairs[432][2] = CALC.SYM_EVAL(function);
                 //ArrayList<CalcObject> funcObjects = giveList(CALC.MULTIPLY, function);
-                funcObjects = giveList(CALC.MULTIPLY, function);
-                //System.out.println(funcObjects);
-                ArrayList<CalcObject[]> udvPairs = new ArrayList<>();
-                CalcObject[] temp = new CalcObject[2];
-                CalcObject notOne = CALC.ONE;
-                for (int i = 0; i < funcObjects.size(); i++) {
-                    notOne = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(notOne, funcObjects.get(i)));
-                }
-                temp[0] = CALC.ONE;
-                temp[1] = notOne;
-                udvPairs.add(temp);
-                temp = new CalcObject[2];
-                temp[1] = CALC.ONE;
-                temp[0] = notOne;
-                udvPairs.add(temp);
-                for (int i = 0; i < funcObjects.size() - 1; i++) {
-                    //System.out.println("i=" + i);
-                    //System.out.println(function.size());
-                    for (int j = 0; j < funcObjects.size() - i; j++) {
-                        //System.out.println("j=" + j);
-                        for (int skip = 0; skip < funcObjects.size() - i - j; skip++) {
-                            //System.out.println("skip=" + skip);
-                            CalcObject u = CALC.ONE;
-                            CalcObject dv = CALC.ONE;
-                            u = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(u, funcObjects.get(j)));
-                            for (int start = j + skip + 1; start <= j + i + skip; start++) {
-                                u = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(u, funcObjects.get(start)));
-                            }
-                            for (int end = 0; end < j; end++) {
-                                dv = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(dv, funcObjects.get(end)));
-                            }
-                            for (int end = j + 1; end < j + skip + 1; end++) {
-                                dv = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(dv, funcObjects.get(end)));
-                            }
-                            for (int end = j + i + 1 + skip; end < funcObjects.size(); end++) {
-                                dv = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(dv, funcObjects.get(end)));
-                            }
-                            //}
-                            //System.out.println("Pair " + pairCounter + "; u: " + u.toString() + " dv: " + dv.toString());
-                            temp = new CalcObject[2];
-                            temp[0] = u;
-                            temp[1] = dv;
-                            boolean addIt = true;
-                            for (int x = 0; x < udvPairs.size(); x++) {
-                                if (udvPairs.get(x)[0].equals(u) && udvPairs.get(x)[1].equals(dv)) {
-                                    addIt = false;
-                                    x = udvPairs.size();
-                                }
-                            }
-                            if (addIt) {
-                                udvPairs.add(temp);
-                            }
-                            //pairCounter++;
-                        }
-                    }
-                }
-                ArrayList<IntegrationThread> intByPartsThreads = new ArrayList<>();
-                for (CalcObject[] pair : udvPairs) {
-                    IntegrationThread tempT = new IntegrationThread(pair, var, this);
-                    intByPartsThreads.add(tempT);
-                }
-                for (IntegrationThread intThread : intByPartsThreads) {
-                    intThread.start();
-                }
-                CalcObject answer = null;
-                while (answer == null) {
-                    for (IntegrationThread intThread : intByPartsThreads) {
-                        if (intThread.answer != null) {
-                            System.out.println(intThread.answer);
-                            answer = intThread.answer;
-                            this.intByPartsThreadsAreAlive = false;
-                            return answer;
-                            //intByPartsThreads = null;
-                        }
-                    }
-                }
+                CalcINTBYPARTS temp = new CalcINTBYPARTS(intByPartsCarryOver);
+                return CALC.SYM_EVAL(temp.integrate(function, var));
                 //return obj; //should never have to return obj at end, if statements above handle it
             }
         }
@@ -371,8 +301,11 @@ public class CalcINT implements CalcFunctionEvaluator {
                         CALC.ABS.createFunction(var));
             }
         }
-        return obj;
+        System.out.println("Integration Failed");
+        //return obj;
         //return CALC.INT.createFunction(obj, var); //don't know how to integrate (yet). Return original expression.
+        return CALC.ERROR;
+        //return obj;
     }
 
     public boolean superEquals(CalcObject first, CalcObject second) {
@@ -399,7 +332,6 @@ public class CalcINT implements CalcFunctionEvaluator {
         }
         return list;
     }
-
     //insert private method integrate(function, var, u-sub)
     //use for recursion to simplify other u-sub cases
 }

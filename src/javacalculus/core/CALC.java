@@ -67,6 +67,8 @@ public final class CALC {
             CalcSymbol.NO_PROPERTY);
     public static final CalcSymbol INT = new CalcSymbol("INT", new CalcINT(),
             CalcSymbol.NO_PROPERTY);
+    public static final CalcSymbol INTBYPARTS = new CalcSymbol("INTBYPARTS", new CalcINTBYPARTS(),
+            CalcSymbol.NO_PROPERTY);
     //TODO implement INT (integration). This is gonna a hell of a lot harder.
     public static final CalcSymbol DEFINE = new CalcSymbol("DEFINE", new CalcDEFINE(),
             CalcSymbol.OPERATOR | CalcSymbol.FAST_EVAL);
@@ -119,6 +121,7 @@ public final class CALC {
     public static final CalcSymbol SYMBOL = new CalcSymbol("Symbol");
     public static final CalcSymbol MATRIX = new CalcSymbol("Matrix");
     public static final CalcSymbol VECTOR = new CalcSymbol("Vector");
+    public static final CalcSymbol ERROR = new CalcSymbol("Error");
     /**
      * Symbols for built-in constants
      */
@@ -295,6 +298,8 @@ public final class CALC {
             return (CalcSymbol) DIFF.clone();
         } else if (identifier.equals("INT")) {
             return (CalcSymbol) INT.clone();
+        } else if (identifier.equals("INTBYPARTS")) {
+            return (CalcSymbol) INTBYPARTS.clone();
         } else if (identifier.equals("EXPAND")) {
             return (CalcSymbol) EXPAND.clone();
         } else if (identifier.equals("DEPTH")) {
@@ -332,7 +337,7 @@ public final class CALC {
                 symbol.setEvaluator(evaluator);
                 return symbol;
             } catch (Exception e) {
-            };
+            }
         }
         return null;
     }

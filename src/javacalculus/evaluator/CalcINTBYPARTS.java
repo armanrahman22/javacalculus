@@ -1,6 +1,7 @@
 package javacalculus.evaluator;
 
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import javacalculus.core.CALC;
 import javacalculus.evaluator.extend.CalcFunctionEvaluator;
@@ -20,15 +21,17 @@ import java.util.concurrent.Executors;
  */
 public class CalcINTBYPARTS implements CalcFunctionEvaluator {
 
-    public boolean intByPartsThreadsAreAlive = true;
     public CalcINTBYPARTS overlord = null;
     public CalcObject answer = null;
+    public CountDownLatch waiter = new CountDownLatch(1);
+    public int recDepth;
 
     public CalcINTBYPARTS() {
     }
 
-    public CalcINTBYPARTS(CalcINTBYPARTS ol) {
+    public CalcINTBYPARTS(CalcINTBYPARTS ol, int r) {
         overlord = ol;
+        recDepth = r;
     }
 
     @Override
@@ -70,20 +73,17 @@ public class CalcINTBYPARTS implements CalcFunctionEvaluator {
             for (int i = 0; i < funcObjects.size(); i++) {
                 notOne = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(notOne, funcObjects.get(i)));
             }
-            temp[0] = CALC.ONE;
-            temp[1] = notOne;
-            udvPairs.add(temp);
-            temp = new CalcObject[2];
+            //temp[0] = CALC.ONE;
+            //temp[1] = notOne;
+            //udvPairs.add(temp);
+            //temp = new CalcObject[2];
             temp[1] = CALC.ONE;
             temp[0] = notOne;
             udvPairs.add(temp);
+            int pairCounter = 0;
             for (int i = 0; i < funcObjects.size() - 1; i++) {
-                //System.out.println("i=" + i);
-                //System.out.println(function.size());
                 for (int j = 0; j < funcObjects.size() - i; j++) {
-                    //System.out.println("j=" + j);
                     for (int skip = 0; skip < funcObjects.size() - i - j; skip++) {
-                        //System.out.println("skip=" + skip);
                         CalcObject u = CALC.ONE;
                         CalcObject dv = CALC.ONE;
                         u = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(u, funcObjects.get(j)));
@@ -99,8 +99,6 @@ public class CalcINTBYPARTS implements CalcFunctionEvaluator {
                         for (int end = j + i + 1 + skip; end < funcObjects.size(); end++) {
                             dv = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(dv, funcObjects.get(end)));
                         }
-                        //}
-                        //System.out.println("Pair " + pairCounter + "; u: " + u.toString() + " dv: " + dv.toString());
                         temp = new CalcObject[2];
                         temp[0] = u;
                         temp[1] = dv;
@@ -113,41 +111,37 @@ public class CalcINTBYPARTS implements CalcFunctionEvaluator {
                         }
                         if (addIt) {
                             udvPairs.add(temp);
+                            //System.out.println("Pair " + pairCounter + "; u: " + u.toString() + " dv: " + dv.toString());
+                            pairCounter++;
                         }
-                        //pairCounter++;
                     }
                 }
             }
+            ExecutorService intByPartsThreads = Executors.newCachedThreadPool();
             if (isMaster()) {
-                ExecutorService intByPartsThreads = Executors.newCachedThreadPool();
+                //System.out.println("I AM THE MASTER");
                 for (CalcObject[] pair : udvPairs) {
-                    IntegrationThread tempT = new IntegrationThread(pair, var, this);
+                    IntegrationThread tempT = new IntegrationThread(pair, var, this, this, recDepth);
                     intByPartsThreads.execute(tempT);
                 }
-                while (answer == null) {
-                    try {
-                        Thread.sleep(1);
-                    } catch (InterruptedException ex) {
-                    }
-                }
-                this.intByPartsThreadsAreAlive = false;
-                intByPartsThreads.shutdown();
-                System.out.println("ANSWER: " + answer);
-                return answer;
             } else {
-                ExecutorService intByPartsThreads = Executors.newCachedThreadPool();
+                //System.out.println("I AM NOT THE MASTER");
                 for (CalcObject[] pair : udvPairs) {
-                    IntegrationThread tempT = new IntegrationThread(pair, var, overlord);
+                    IntegrationThread tempT = new IntegrationThread(pair, var, overlord, this, recDepth);
                     intByPartsThreads.execute(tempT);
                 }
-                while (keepGoing()) {
-                    try {
-                        Thread.sleep(1);
-                    } catch (InterruptedException ex) {
-                    }
-                }
-                intByPartsThreads.shutdown();
             }
+            try {
+                waiter.await();
+            } catch (Exception e) {
+                //e.printStackTrace(System.err);
+            }
+            intByPartsThreads.shutdown();
+            if (isMaster()) {
+                //System.out.println("ANSWER: " + answer);
+                return answer;
+            }
+            //System.out.println("I AM NOT THE MASTER AND I AM CRAZY");
         }
         return CALC.ERROR;
     }
@@ -173,7 +167,7 @@ public class CalcINTBYPARTS implements CalcFunctionEvaluator {
 
     public boolean keepGoing() {
         if (isMaster()) {
-            return intByPartsThreadsAreAlive;
+            return answer == null;
         } else {
             return overlord.keepGoing();
         }

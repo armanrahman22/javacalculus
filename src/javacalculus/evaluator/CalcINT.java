@@ -22,10 +22,16 @@ import java.util.concurrent.Executors;
 public class CalcINT implements CalcFunctionEvaluator {
 
     public CalcINTBYPARTS intByPartsCarryOver = null;
+    public int recDepth;
 
     public CalcINT() {
+        recDepth = 0;
     }
-
+    
+    public CalcINT(int recDepth) {
+        this.recDepth = recDepth;
+    }
+    
 
     @Override
     public CalcObject evaluate(CalcFunction function) {
@@ -197,6 +203,30 @@ public class CalcINT implements CalcFunctionEvaluator {
                         return CALC.ERROR;
                         //return CALC.INT.createFunction(obj, var);
                     }
+                } else {
+                    CalcObject expanded = CALC.SYM_EVAL(CALC.EXPAND.createFunction(obj));
+                    if (obj.equals(expanded)) {
+                        if (recDepth < CALC.max_recursion_depth) {
+                            CalcINTBYPARTS temp = new CalcINTBYPARTS(intByPartsCarryOver, recDepth);
+                            return CALC.SYM_EVAL(temp.integrate(obj, var));
+                        } else {
+                            return CALC.ERROR;
+                        }
+                    } else {
+                        //System.out.println(recDepth);
+                        CalcINT tempInt = new CalcINT(recDepth);
+                        CalcObject answer = CALC.SYM_EVAL(tempInt.integrate(expanded, var));
+                        if (answer instanceof CalcError) {
+                            if (recDepth < CALC.max_recursion_depth) {
+                            CalcINTBYPARTS temp = new CalcINTBYPARTS(intByPartsCarryOver, recDepth);
+                            return CALC.SYM_EVAL(temp.integrate(obj, var));
+                        } else {
+                            return CALC.ERROR;
+                        }
+                        } else {
+                            return answer;
+                        }
+                    }
                 }
                 //System.out.println("U did not work out: " + checkU);
                 //System.out.println("THIS IS THE OBJECT: " + obj);
@@ -232,7 +262,13 @@ public class CalcINT implements CalcFunctionEvaluator {
                  * 
                  * HOW IS THIS HAPPENING
                  * 
-                 * Best bet is a problem with u sub... gotta note with thoughts
+                 * program is running smooth... error is in the method itself. never integrate by parts unless other methods are exausted. Did it by hand
+                 * and got diff answers depending on starting parameters...
+                 * 
+                 * Best bet is a problem with u sub... gotta note with thoughts //nope, but still a thing
+                 * 
+                 * NEW RULE, master thread cannot spawn new master threads...
+                 * 
                  */
 
                 //START INTEGRATION BY PARTS
@@ -240,8 +276,6 @@ public class CalcINT implements CalcFunctionEvaluator {
                 //secondObj = function.get(1);
                 //System.out.println("FirstObj: " + firstObj);
                 //ArrayList<CalcObject> funcObjects = giveList(CALC.MULTIPLY, function);
-                CalcINTBYPARTS temp = new CalcINTBYPARTS(intByPartsCarryOver);
-                return CALC.SYM_EVAL(temp.integrate(function, var));
                 //return obj; //should never have to return obj at end, if statements above handle it
             }
         }
@@ -301,7 +335,7 @@ public class CalcINT implements CalcFunctionEvaluator {
                         CALC.ABS.createFunction(var));
             }
         }
-        System.out.println("Integration Failed");
+        //System.out.println("Integration Failed");
         //return obj;
         //return CALC.INT.createFunction(obj, var); //don't know how to integrate (yet). Return original expression.
         return CALC.ERROR;

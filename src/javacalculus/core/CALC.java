@@ -29,6 +29,7 @@ public final class CALC {
      */
     public static MathContext mathcontext = MathContext.DECIMAL32;
     public static boolean operator_notation = false;
+    public static int max_recursion_depth = 3;
     /**
      * Standard unaryChar operator symbols
      */

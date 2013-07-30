@@ -68,9 +68,15 @@ public final class IntegrationThread implements Runnable {
                     //System.exit(1);
                 }
             }
+            if (overlord.answer == null) {
+                overlord.answer = CALC.ERROR;
+            }
             father.waiter.countDown();
             //overlord.waiter.countDown();
         } else {
+            if (overlord.answer == null) {
+                overlord.answer = CALC.ERROR;
+            }
             father.waiter.countDown();
         }
     }

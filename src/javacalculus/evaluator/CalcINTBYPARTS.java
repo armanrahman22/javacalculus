@@ -36,15 +36,14 @@ public class CalcINTBYPARTS implements CalcFunctionEvaluator {
 
     @Override
     public CalcObject evaluate(CalcFunction function) {
-        if (function.size() == 2) {	//case INT(function, variable)
-            if (function.get(1) instanceof CalcSymbol) {	//evaluate, adding an arbitrary constant for good practice
-                //return CALC.ADD.createFunction(integrate(function.get(0), (CalcSymbol) function.get(1)), new CalcSymbol("C"));
-                return CALC.ADD.createFunction(integrate(function.get(0), (CalcSymbol) function.get(1)));
+        if (function.size() == 2) {
+            if (function.get(1) instanceof CalcSymbol) {
+                return integrate(function.get(0), (CalcSymbol) function.get(1));
             } else {
-                throw new CalcWrongParametersException("INT -> 2nd parameter syntax");
+                throw new CalcWrongParametersException("INTBYPARTS -> 2nd parameter syntax");
             }
         } else {
-            throw new CalcWrongParametersException("INT -> wrong number of parameters");
+            throw new CalcWrongParametersException("INTBYPARTS -> wrong number of parameters");
         }
     }
 
@@ -146,7 +145,7 @@ public class CalcINTBYPARTS implements CalcFunctionEvaluator {
         return CALC.ERROR;
     }
 
-    public ArrayList<CalcObject> giveList(CalcSymbol operator, CalcObject func) {
+    private ArrayList<CalcObject> giveList(CalcSymbol operator, CalcObject func) {
         ArrayList<CalcObject> list = new ArrayList<>();
         //System.out.println(func);
         if (func instanceof CalcFunction && func.getHeader().equals(operator)) {
@@ -176,6 +175,4 @@ public class CalcINTBYPARTS implements CalcFunctionEvaluator {
     public boolean isMaster() {
         return overlord == null;
     }
-    //insert private method integrate(function, var, u-sub)
-    //use for recursion to simplify other u-sub cases
 }

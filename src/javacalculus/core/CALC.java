@@ -51,6 +51,8 @@ public final class CALC {
             CalcSymbol.OPERATOR);
     public static final CalcSymbol DEPTH = new CalcSymbol("DEPTH", new CalcDEPTH(),
             CalcSymbol.OPERATOR);
+    public static final CalcSymbol SIMPLIFY = new CalcSymbol("SIMPLIFY", new CalcSIMPLIFY(),
+            CalcSymbol.OPERATOR);
     /**
      * Special function symbols
      */
@@ -305,6 +307,8 @@ public final class CALC {
             return (CalcSymbol) EXPAND.clone();
         } else if (identifier.equals("DEPTH")) {
             return (CalcSymbol) DEPTH.clone();
+        } else if (identifier.equals("SIMPLIFY")) {
+            return (CalcSymbol) SIMPLIFY.clone();
         } else if (identifier.equals("DEFINE")) {
             return (CalcSymbol) DEFINE.clone();
         } else if (identifier.equals("PLOT")) {

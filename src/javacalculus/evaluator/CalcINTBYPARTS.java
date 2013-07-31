@@ -1,7 +1,8 @@
 package javacalculus.evaluator;
 
 import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import javacalculus.core.CALC;
 import javacalculus.evaluator.extend.CalcFunctionEvaluator;
@@ -10,27 +11,21 @@ import javacalculus.struct.*;
 import java.util.concurrent.Executors;
 
 /**
- * This function evaluator applies the Integral operator to a function with
+ * This function evaluator assists in the evaluation of an integral by doing integration by parts with
  * respect to a given variable.
  *
- * @author Duyun Chen <A
- * HREF="mailto:duchen@seas.upenn.edu">[duchen@seas.upenn.edu]</A>, Seth Shannin
- * <A HREF="mailto:sshannin@seas.upenn.edu">[sshannin@seas.upenn.edu]</A>
- *
  * @author Seva Luchianov
+ * seva.luchianov@gmail.com
  */
 public class CalcINTBYPARTS implements CalcFunctionEvaluator {
 
-    public CalcINTBYPARTS overlord = null;
     public CalcObject answer = null;
-    public CountDownLatch waiter = new CountDownLatch(1);
     public int recDepth;
 
     public CalcINTBYPARTS() {
     }
 
-    public CalcINTBYPARTS(CalcINTBYPARTS ol, int r) {
-        overlord = ol;
+    public CalcINTBYPARTS(int r) {
         recDepth = r;
     }
 
@@ -72,10 +67,6 @@ public class CalcINTBYPARTS implements CalcFunctionEvaluator {
             for (int i = 0; i < funcObjects.size(); i++) {
                 notOne = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(notOne, funcObjects.get(i)));
             }
-            //temp[0] = CALC.ONE;
-            //temp[1] = notOne;
-            //udvPairs.add(temp);
-            //temp = new CalcObject[2];
             temp[1] = CALC.ONE;
             temp[0] = notOne;
             udvPairs.add(temp);
@@ -117,62 +108,36 @@ public class CalcINTBYPARTS implements CalcFunctionEvaluator {
                 }
             }
             ExecutorService intByPartsThreads = Executors.newCachedThreadPool();
-            if (isMaster()) {
-                //System.out.println("I AM THE MASTER");
-                for (CalcObject[] pair : udvPairs) {
-                    IntegrationThread tempT = new IntegrationThread(pair, var, this, this, recDepth);
-                    intByPartsThreads.execute(tempT);
-                }
-            } else {
-                //System.out.println("I AM NOT THE MASTER");
-                for (CalcObject[] pair : udvPairs) {
-                    IntegrationThread tempT = new IntegrationThread(pair, var, overlord, this, recDepth);
-                    intByPartsThreads.execute(tempT);
-                }
+            ArrayList<Callable<CalcObject>> threads = new ArrayList<>();
+            for (CalcObject[] pair : udvPairs) {
+                threads.add(new IntegrationThread(pair, var, this, recDepth, udvPairs.size()));
             }
             try {
-                waiter.await();
-            } catch (Exception e) {
-                //e.printStackTrace(System.err);
+                answer = intByPartsThreads.invokeAny(threads);
+            } catch (InterruptedException | ExecutionException e) {
             }
             intByPartsThreads.shutdown();
-            if (isMaster()) {
-                //System.out.println("ANSWER: " + answer);
-                return answer;
-            }
-            //System.out.println("I AM NOT THE MASTER AND I AM CRAZY");
+            return answer;
+
         }
         return CALC.ERROR;
     }
 
     private ArrayList<CalcObject> giveList(CalcSymbol operator, CalcObject func) {
         ArrayList<CalcObject> list = new ArrayList<>();
-        //System.out.println(func);
         if (func instanceof CalcFunction && func.getHeader().equals(operator)) {
             ArrayList<CalcObject> funcParts = ((CalcFunction) func).getAll();
             for (int i = 0; i < funcParts.size(); i++) {
                 CalcObject firstObj = funcParts.get(i);
-                //if (firstObj instanceof CalcFunction && ((CalcFunction) firstObj).getHeader().equals(operator)) {
                 list.addAll(giveList(operator, firstObj));
-                //}
             }
-            //System.out.println("LIST in loop" + list);
         } else {
             list.add(func);
-            //System.out.println("LIST" + list);
         }
         return list;
     }
 
     public boolean keepGoing() {
-        if (isMaster()) {
-            return answer == null;
-        } else {
-            return overlord.keepGoing();
-        }
-    }
-
-    public boolean isMaster() {
-        return overlord == null;
+        return answer == null;
     }
 }

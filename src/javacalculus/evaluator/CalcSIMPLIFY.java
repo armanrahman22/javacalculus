@@ -8,9 +8,6 @@ import javacalculus.struct.*;
 
 /**
  *
- * @author Duyun Chen <A
- * HREF="mailto:duchen@seas.upenn.edu">[duchen@seas.upenn.edu]</A>, Seth Shannin
- * <A HREF="mailto:sshannin@seas.upenn.edu">[sshannin@seas.upenn.edu]</A>
  *
  * @author Seva Luchianov
  */
@@ -30,7 +27,7 @@ public class CalcSIMPLIFY implements CalcFunctionEvaluator {
 
     public CalcObject simplify(CalcObject object) {
         object = CALC.SYM_EVAL(object);
-        //System.out.println("CHECKING: "+object);
+        //System.out.println("CHECKING: " + object);
         if (object instanceof CalcFunction) {
             ArrayList<CalcObject> multiplyParts = giveList(CALC.MULTIPLY, object);
             CalcObject numeObj = CALC.ONE;
@@ -73,7 +70,7 @@ public class CalcSIMPLIFY implements CalcFunctionEvaluator {
                 }
                 return CALC.SYM_EVAL(result);
             } else {
-                return CALC.MULTIPLY.createFunction(numeObj, denomObj);
+                return CALC.MULTIPLY.createFunction(numeObj, CALC.POWER.createFunction(denomObj, CALC.NEG_ONE));
             }
         } else {
             return object;

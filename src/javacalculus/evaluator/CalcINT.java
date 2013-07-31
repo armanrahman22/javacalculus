@@ -2,13 +2,11 @@ package javacalculus.evaluator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import javacalculus.core.CALC;
 import javacalculus.core.CalcParser;
 import javacalculus.evaluator.extend.CalcFunctionEvaluator;
 import javacalculus.exception.CalcWrongParametersException;
 import javacalculus.struct.*;
-import java.util.concurrent.Executors;
 
 /**
  * This function evaluator applies the Integral operator to a function with
@@ -22,7 +20,6 @@ import java.util.concurrent.Executors;
  */
 public class CalcINT implements CalcFunctionEvaluator {
 
-    public CalcINTBYPARTS intByPartsCarryOver = null;
     public int recDepth;
 
     public CalcINT() {
@@ -53,18 +50,21 @@ public class CalcINT implements CalcFunctionEvaluator {
             obj = CALC.SYM_EVAL(obj); //evaluate the function before attempting integration
         }
         //////////do u sub before any operation
-        CalcObject[] uSub = parseU(obj, var);
-        if (uSub != null) {
-            //System.out.println("FUNC: " + uSub[0]);
-            //System.out.println("U   : " + uSub[1]);
-            String resultString = CALC.SYM_EVAL(CALC.INT.createFunction(uSub[0], var)).toString().replaceAll(var.toString(), "(" + uSub[1].toString() + ")");
-            CalcParser parser = new CalcParser();
-            try {
-                return CALC.SYM_EVAL(parser.parse(resultString));
-            } catch (Exception e) {
-                System.err.println("error parsing new function");
-                e.printStackTrace(System.err);
-                return CALC.ERROR;
+        if (recDepth < CALC.max_recursion_depth) {
+            CalcObject[] uSub = parseU(obj, var);
+            if (uSub != null) {
+                //System.out.println("FUNC: " + uSub[0]);
+                //System.out.println("U   : " + uSub[1]);
+                CalcINT doit = new CalcINT(recDepth + 1);
+                String resultString = CALC.SYM_EVAL(doit.integrate(uSub[0], var)).toString().replaceAll(var.toString(), "(" + uSub[1].toString() + ")");
+                CalcParser parser = new CalcParser();
+                try {
+                    return CALC.SYM_EVAL(parser.parse(resultString));
+                } catch (Exception e) {
+                    System.err.println("error parsing new function");
+                    e.printStackTrace(System.err);
+                    return CALC.ERROR;
+                }
             }
         }
         //////////
@@ -91,7 +91,7 @@ public class CalcINT implements CalcFunctionEvaluator {
                 CalcObject expanded = CALC.SYM_EVAL(CALC.EXPAND.createFunction(obj));
                 if (obj.equals(expanded)) {
                     if (recDepth < CALC.max_recursion_depth) {
-                        CalcINTBYPARTS temp = new CalcINTBYPARTS(intByPartsCarryOver, recDepth);
+                        CalcINTBYPARTS temp = new CalcINTBYPARTS(recDepth);
                         return CALC.SYM_EVAL(temp.integrate(obj, var));
                     } else {
                         return CALC.ERROR;
@@ -102,7 +102,7 @@ public class CalcINT implements CalcFunctionEvaluator {
                     CalcObject answer = CALC.SYM_EVAL(tempInt.integrate(expanded, var));
                     if (answer instanceof CalcError) {
                         if (recDepth < CALC.max_recursion_depth) {
-                            CalcINTBYPARTS temp = new CalcINTBYPARTS(intByPartsCarryOver, recDepth);
+                            CalcINTBYPARTS temp = new CalcINTBYPARTS(recDepth);
                             return CALC.SYM_EVAL(temp.integrate(obj, var));
                         } else {
                             return CALC.ERROR;

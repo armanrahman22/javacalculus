@@ -1,6 +1,7 @@
 package javacalculus.evaluator;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import javacalculus.core.CALC;
 import javacalculus.core.CalcParser;
@@ -215,6 +216,7 @@ public class CalcINT implements CalcFunctionEvaluator {
                 i--;
             }
         }
+        //System.out.println("ALL CANDIDATES: " + allCandidates);
         for (CalcObject testU : allCandidates) {
             CalcObject diffTestU = CALC.SYM_EVAL(CALC.DIFF.createFunction(testU, var));
             CalcObject testDiv = CALC.SYM_EVAL(CALC.SIMPLIFY.createFunction(CALC.MULTIPLY.createFunction(input, CALC.POWER.createFunction(diffTestU, CALC.NEG_ONE))));
@@ -239,21 +241,37 @@ public class CalcINT implements CalcFunctionEvaluator {
 
     private ArrayList<CalcObject> parseNestedFunction(CalcObject func) {
         ArrayList<CalcObject> list = new ArrayList<>();
-        //System.out.println(func);
         if (func instanceof CalcFunction) {
-            ArrayList<CalcObject> funcParts = ((CalcFunction) func).getAll();
-            list.add(func);
-            for (int i = 0; i < funcParts.size(); i++) {
-                CalcObject firstObj = funcParts.get(i);
-                //if (firstObj instanceof CalcFunction && ((CalcFunction) firstObj).getHeader().equals(operator)) {
-                list.addAll(parseNestedFunction(firstObj));
-                //}
+            CalcFunction function = (CalcFunction) func;
+            CalcSymbol header = function.getHeader();
+            ArrayList<CalcObject> funcParts = giveList(header, function);
+            if (header.equals(CALC.POWER)) {
+                ArrayList<CalcObject> temp = new ArrayList<>();
+                for (int i = 0; i < funcParts.size(); i++) {
+                    temp.add(combinePowers(funcParts.subList(i, funcParts.size())));
+                }
+                funcParts.addAll(temp);
+                list.addAll(funcParts);
+            } else {
+                for (int i = 0; i < funcParts.size(); i++) {
+                    CalcObject firstObj = funcParts.get(i);
+                    list.addAll(parseNestedFunction(firstObj));
+                }
             }
-            //System.out.println("LIST in loop" + list);
         } else {
             list.add(func);
-            //System.out.println("LIST" + list);
         }
         return list;
+    }
+
+    private CalcObject combinePowers(List<CalcObject> list) {
+        if (list == null) {
+            return null;
+        }
+        CalcObject power = list.get(0);
+        for (int i = 1; i < list.size(); i++) {
+            power = CALC.POWER.createFunction(power, list.get(i));
+        }
+        return power;
     }
 }

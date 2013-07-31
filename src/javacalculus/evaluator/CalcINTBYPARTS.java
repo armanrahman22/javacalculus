@@ -110,7 +110,7 @@ public class CalcINTBYPARTS implements CalcFunctionEvaluator {
             ExecutorService intByPartsThreads = Executors.newCachedThreadPool();
             ArrayList<Callable<CalcObject>> threads = new ArrayList<>();
             for (CalcObject[] pair : udvPairs) {
-                threads.add(new IntegrationThread(pair, var, this, recDepth, udvPairs.size()));
+                threads.add(new IntegrationThread(pair, var, this, recDepth));
             }
             try {
                 answer = intByPartsThreads.invokeAny(threads);

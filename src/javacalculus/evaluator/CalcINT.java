@@ -90,7 +90,7 @@ public class CalcINT implements CalcFunctionEvaluator {
             } else { //	INT(f(x)*g(x),x) = ?? (u-sub)
                 CalcObject expanded = CALC.SYM_EVAL(CALC.EXPAND.createFunction(obj));
                 if (obj.equals(expanded)) {
-                    if (recDepth < CALC.max_recursion_depth) {
+                    if (CALC.full_integrate_mode && recDepth < CALC.max_recursion_depth) {
                         CalcINTBYPARTS temp = new CalcINTBYPARTS(recDepth);
                         return CALC.SYM_EVAL(temp.integrate(obj, var));
                     } else {
@@ -101,7 +101,7 @@ public class CalcINT implements CalcFunctionEvaluator {
                     CalcINT tempInt = new CalcINT(recDepth);
                     CalcObject answer = CALC.SYM_EVAL(tempInt.integrate(expanded, var));
                     if (answer instanceof CalcError) {
-                        if (recDepth < CALC.max_recursion_depth) {
+                        if (CALC.full_integrate_mode && recDepth < CALC.max_recursion_depth) {
                             CalcINTBYPARTS temp = new CalcINTBYPARTS(recDepth);
                             return CALC.SYM_EVAL(temp.integrate(obj, var));
                         } else {

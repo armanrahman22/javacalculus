@@ -1,6 +1,7 @@
 package javacalculus.core;
 
 import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
@@ -27,10 +28,13 @@ public final class CALC {
      * bit to IEEE 754R Decimal32 standards (7 digits). The precision can be
      * changed by calling <b>CALC.setMathContext(int precision)</b>
      */
+    //public static MathContext mathcontext = MathContext.UNLIMITED;
     public static MathContext mathcontext = MathContext.DECIMAL32;
+    //public static MathContext mathcontext = ;
     public static boolean operator_notation = false;
     public static int max_recursion_depth = 3;
     public static boolean full_integrate_mode = true;
+    public static boolean fix_rounding_errors = true;
     /**
      * Standard unaryChar operator symbols
      */
@@ -53,6 +57,10 @@ public final class CALC {
     public static final CalcSymbol DEPTH = new CalcSymbol("DEPTH", new CalcDEPTH(),
             CalcSymbol.OPERATOR);
     public static final CalcSymbol SIMPLIFY = new CalcSymbol("SIMPLIFY", new CalcSIMPLIFY(),
+            CalcSymbol.OPERATOR);
+    public static final CalcSymbol FACTOR = new CalcSymbol("FACTOR", new CalcFACTOR(),
+            CalcSymbol.OPERATOR);
+    public static final CalcSymbol TEST = new CalcSymbol("TEST", new CalcTEST(),
             CalcSymbol.OPERATOR);
     /**
      * Special function symbols
@@ -310,6 +318,10 @@ public final class CALC {
             return (CalcSymbol) DEPTH.clone();
         } else if (identifier.equals("SIMPLIFY")) {
             return (CalcSymbol) SIMPLIFY.clone();
+        } else if (identifier.equals("FACTOR")) {
+            return (CalcSymbol) FACTOR.clone();
+        } else if (identifier.equals("TEST")) {
+            return (CalcSymbol) TEST.clone();
         } else if (identifier.equals("DEFINE")) {
             return (CalcSymbol) DEFINE.clone();
         } else if (identifier.equals("PLOT")) {

@@ -97,7 +97,7 @@ public class CalcINT implements CalcFunctionEvaluator {
                         return CALC.ERROR;
                     }
                 } else {
-                    //System.out.println(recDepth);
+                    ////System.out.println(recDepth);
                     CalcINT tempInt = new CalcINT(recDepth);
                     CalcObject answer = CALC.SYM_EVAL(tempInt.integrate(expanded, var));
                     if (answer instanceof CalcError) {
@@ -123,8 +123,8 @@ public class CalcINT implements CalcFunctionEvaluator {
                         CalcObject temp = CALC.MULTIPLY.createFunction(
                                 CALC.POWER.createFunction(firstObj, CALC.ADD.createFunction(secondObj, CALC.ONE)),
                                 CALC.POWER.createFunction(CALC.ADD.createFunction(secondObj, CALC.ONE), CALC.NEG_ONE));
-                        //System.out.println("WE ARE IN THE 1/x BRANCH");
-                        //System.out.println(temp);
+                        ////System.out.println("WE ARE IN THE 1/x BRANCH");
+                        ////System.out.println(temp);
                         return temp;
                     } else {
                         return CALC.LN.createFunction(CALC.ABS.createFunction(firstObj));
@@ -169,7 +169,7 @@ public class CalcINT implements CalcFunctionEvaluator {
                         CALC.ABS.createFunction(var));
             }
         }
-        //System.out.println("Integration Failed");
+        ////System.out.println("Integration Failed");
         //return obj;
         //return CALC.INT.createFunction(obj, var); //don't know how to integrate (yet). Return original expression.
         return CALC.ERROR;
@@ -184,7 +184,7 @@ public class CalcINT implements CalcFunctionEvaluator {
 
     private ArrayList<CalcObject> giveList(CalcSymbol operator, CalcObject func) {
         ArrayList<CalcObject> list = new ArrayList<>();
-        //System.out.println(func);
+        ////System.out.println(func);
         if (func instanceof CalcFunction && func.getHeader().equals(operator)) {
             ArrayList<CalcObject> funcParts = ((CalcFunction) func).getAll();
             for (int i = 0; i < funcParts.size(); i++) {
@@ -193,10 +193,10 @@ public class CalcINT implements CalcFunctionEvaluator {
                 list.addAll(giveList(operator, firstObj));
                 //}
             }
-            //System.out.println("LIST in loop" + list);
+            ////System.out.println("LIST in loop" + list);
         } else {
             list.add(func);
-            //System.out.println("LIST" + list);
+            ////System.out.println("LIST" + list);
         }
         return list;
     }
@@ -207,7 +207,7 @@ public class CalcINT implements CalcFunctionEvaluator {
             return null;
         }
         ArrayList<CalcObject> objects = giveList(CALC.MULTIPLY, input);
-        //System.out.println("OBJECTS: " + objects);
+        ////System.out.println("OBJECTS: " + objects);
         ArrayList<CalcObject> allCandidates = new ArrayList<>();
         for (CalcObject piece : objects) {
             allCandidates.addAll(parseNestedFunction(piece));
@@ -220,11 +220,15 @@ public class CalcINT implements CalcFunctionEvaluator {
             }
         }
         for (CalcObject testU : allCandidates) {
+            //System.out.println("U IS: " + testU.toString());
             CalcObject diffTestU = CALC.SYM_EVAL(CALC.DIFF.createFunction(testU, var));
-            CalcObject testDiv = CALC.SYM_EVAL(CALC.SIMPLIFY.createFunction(CALC.MULTIPLY.createFunction(input, CALC.POWER.createFunction(diffTestU, CALC.NEG_ONE))));
+            CalcObject testDiv = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(input, CALC.POWER.createFunction(diffTestU, CALC.NEG_ONE)));
             CalcParser parser = new CalcParser();
             //System.out.println("RESULT: " + testDiv.toString());
-            //System.out.println("U IS: " + testU.toString());
+            testDiv = CALC.SYM_EVAL(CALC.SIMPLIFY.createFunction(testDiv));
+            //System.out.println("RESULT SIMPLIFIED: " + testDiv.toString());
+            //testDiv = CALC.SYM_EVAL(CALC.SIMPLIFY.createFunction(testDiv));
+            ////System.out.println("RESULT SIMPLIFIED AGAIN: " + testDiv.toString());
             String testResult = testDiv.toString().replace(testU.toString(), "VARIABLE");
             //System.out.println("REPLACED: " + testResult);
             if (!testResult.contains(var.toString())) {

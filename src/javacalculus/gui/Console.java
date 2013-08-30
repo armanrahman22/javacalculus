@@ -1,4 +1,4 @@
-package test;
+package javacalculus.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -26,7 +26,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-public class TestAPI extends JFrame implements ActionListener, KeyListener {
+public class Console extends JFrame implements ActionListener, KeyListener {
 	
 	/**
 	 * 
@@ -48,12 +48,12 @@ public class TestAPI extends JFrame implements ActionListener, KeyListener {
 	{
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				new TestAPI();
+				new Console();
 			}
 		});
 	}
 	
-	public TestAPI() {
+	public Console() {
 		super("Javacalculus Test GUI");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);

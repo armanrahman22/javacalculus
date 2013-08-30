@@ -22,7 +22,7 @@ public class CalcEXPAND implements CalcFunctionEvaluator {
         if (input.size() == 1) {
             CalcObject obj = input.get(0);
             //Simplify object before expanding (combine fractions)
-            obj = CALC.SYM_EVAL(CALC.SIMPLIFY.createFunction(obj));
+            //obj = CALC.SYM_EVAL(CALC.SIMPLIFY.createFunction(obj));
             if (obj.getHeader().equals(CALC.ADD) && ((CalcFunction) obj).size() > 1) { //	EXPAND(y1+y2+...,x) = EXPAND(y1,x) + EXPAND(y2,x) + ...
                 CalcFunction function = (CalcFunction) obj;
                 CalcFunction functionB = new CalcFunction(CALC.ADD, function, 1, function.size());

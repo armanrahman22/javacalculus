@@ -41,7 +41,7 @@ public final class IntegrationThread implements Callable {
                 try {
                     CalcObject u = udvPair[0];
                     CalcObject dv = udvPair[1];
-                    CalcINT vIntegrator = new CalcINT(depth + 1);
+                    CalcINT vIntegrator = new CalcINT(depth);
                     CalcObject v = CALC.SYM_EVAL(vIntegrator.integrate(dv, var));
                     u = CALC.SYM_EVAL(u);
                     v = CALC.SYM_EVAL(v);
@@ -52,9 +52,10 @@ public final class IntegrationThread implements Callable {
                     //System.out.println("This is our du: " + du);
                     CalcObject uTimesV = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(u, v));
                     CalcObject vTimesDu = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(v, du));
-                    CalcINT vduIntegrator = new CalcINT(depth + 1);
+                    CalcINT vduIntegrator = new CalcINT(depth);
                     //System.out.println(toString());
                     CalcObject answer = CALC.SYM_EVAL(CALC.ADD.createFunction(uTimesV, CALC.MULTIPLY.createFunction(vduIntegrator.integrate(vTimesDu, var), CALC.NEG_ONE)));
+                    //System.out.println(answer);
                     if (!containsError(answer)) {
                         return answer;
                     }

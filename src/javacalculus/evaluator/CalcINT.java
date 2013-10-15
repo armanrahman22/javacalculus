@@ -54,7 +54,7 @@ public class CalcINT implements CalcFunctionEvaluator {
             CalcObject[] uSub = parseU(obj, var);
             if (uSub != null) {
                 //System.out.println("FUNC: " + uSub[0]);
-                //System.out.println("U   : " + uSub[1]);
+                //System.out.println("X=>U: " + uSub[1]);
                 CalcINT doit = new CalcINT(recDepth + 1);
                 String resultString = CALC.SYM_EVAL(doit.integrate(uSub[0], var)).toString().replaceAll(var.toString(), "(" + uSub[1].toString() + ")");
                 CalcParser parser = new CalcParser();
@@ -91,23 +91,28 @@ public class CalcINT implements CalcFunctionEvaluator {
                 CalcObject expanded = CALC.SYM_EVAL(CALC.EXPAND.createFunction(obj));
                 if (obj.equals(expanded)) {
                     if (CALC.full_integrate_mode && recDepth < CALC.max_recursion_depth) {
-                        CalcINTBYPARTS temp = new CalcINTBYPARTS(recDepth);
+                        CalcINTBYPARTS temp = new CalcINTBYPARTS(recDepth+1);
+                        //System.out.println("GOING HARD MODE");
                         return CALC.SYM_EVAL(temp.integrate(obj, var));
                     } else {
+                        //System.out.println("LOL2");
                         return CALC.ERROR;
                     }
                 } else {
-                    ////System.out.println(recDepth);
-                    CalcINT tempInt = new CalcINT(recDepth);
+                    //////System.out.println(recDepth);
+                    CalcINT tempInt = new CalcINT(recDepth+1);
                     CalcObject answer = CALC.SYM_EVAL(tempInt.integrate(expanded, var));
                     if (answer instanceof CalcError) {
                         if (CALC.full_integrate_mode && recDepth < CALC.max_recursion_depth) {
-                            CalcINTBYPARTS temp = new CalcINTBYPARTS(recDepth);
+                            CalcINTBYPARTS temp = new CalcINTBYPARTS(recDepth+1);
+                            //System.out.println("EXPANSION BRANCH GOING HARD MODE");
                             return CALC.SYM_EVAL(temp.integrate(obj, var));
                         } else {
+                            //System.out.println("LOL4");
                             return CALC.ERROR;
                         }
                     } else {
+                        //System.out.println("LOL5");
                         return answer;
                     }
                 }
@@ -117,21 +122,33 @@ public class CalcINT implements CalcFunctionEvaluator {
             CalcFunction function = (CalcFunction) obj;
             CalcObject firstObj = function.get(0);
             CalcObject secondObj = function.get(1);
+            //System.out.println("POWER? " + firstObj);
+            //System.out.println("POWER2? " + secondObj);
             if (firstObj instanceof CalcSymbol) {
+                //System.out.println("Symbol");
                 if (secondObj.isNumber() || secondObj instanceof CalcSymbol && !(secondObj.equals(var))) { //	INT(x^n,x) = x^(n+1)/(n+1)
                     if (!secondObj.equals(CALC.NEG_ONE)) {//handle 1/x
                         CalcObject temp = CALC.MULTIPLY.createFunction(
                                 CALC.POWER.createFunction(firstObj, CALC.ADD.createFunction(secondObj, CALC.ONE)),
                                 CALC.POWER.createFunction(CALC.ADD.createFunction(secondObj, CALC.ONE), CALC.NEG_ONE));
-                        ////System.out.println("WE ARE IN THE 1/x BRANCH");
-                        ////System.out.println(temp);
+                        //System.out.println("BROKEN? " + temp.toString());
+                        //////System.out.println("WE ARE IN THE 1/x BRANCH");
+                        //////System.out.println(temp);
                         return temp;
                     } else {
                         return CALC.LN.createFunction(CALC.ABS.createFunction(firstObj));
                     }
                 }
             } else if (firstObj.isNumber()) {	// INT(c^x,x) = c^x/ln(c)
-                return CALC.MULTIPLY.createFunction(obj, CALC.POWER.createFunction(CALC.LN.createFunction(firstObj), CALC.NEG_ONE));
+                if (secondObj instanceof CalcSymbol) {
+                    //System.out.println("WE are in here arent we?");
+                    return CALC.MULTIPLY.createFunction(obj, CALC.POWER.createFunction(CALC.LN.createFunction(firstObj), CALC.NEG_ONE));
+                } else {
+                    //System.out.println("this worked before...");
+                    //System.out.println(obj);
+                    // INT(c^f(x),x) = IDK
+                    return CALC.ERROR;
+                }
             }
         }
         if (obj.getHeader().equals(CALC.LN)) {	//	INT(LN(x),x) = x*LN(x) - x
@@ -169,7 +186,7 @@ public class CalcINT implements CalcFunctionEvaluator {
                         CALC.ABS.createFunction(var));
             }
         }
-        ////System.out.println("Integration Failed");
+        //////System.out.println("Integration Failed");
         //return obj;
         //return CALC.INT.createFunction(obj, var); //don't know how to integrate (yet). Return original expression.
         return CALC.ERROR;
@@ -184,7 +201,7 @@ public class CalcINT implements CalcFunctionEvaluator {
 
     private ArrayList<CalcObject> giveList(CalcSymbol operator, CalcObject func) {
         ArrayList<CalcObject> list = new ArrayList<>();
-        ////System.out.println(func);
+        //////System.out.println(func);
         if (func instanceof CalcFunction && func.getHeader().equals(operator)) {
             ArrayList<CalcObject> funcParts = ((CalcFunction) func).getAll();
             for (int i = 0; i < funcParts.size(); i++) {
@@ -193,10 +210,10 @@ public class CalcINT implements CalcFunctionEvaluator {
                 list.addAll(giveList(operator, firstObj));
                 //}
             }
-            ////System.out.println("LIST in loop" + list);
+            //////System.out.println("LIST in loop" + list);
         } else {
             list.add(func);
-            ////System.out.println("LIST" + list);
+            //////System.out.println("LIST" + list);
         }
         return list;
     }
@@ -207,23 +224,37 @@ public class CalcINT implements CalcFunctionEvaluator {
             return null;
         }
         ArrayList<CalcObject> objects = giveList(CALC.MULTIPLY, input);
-        ////System.out.println("OBJECTS: " + objects);
+        //System.out.println("OBJECTS: " + objects);
         ArrayList<CalcObject> allCandidates = new ArrayList<>();
         for (CalcObject piece : objects) {
             allCandidates.addAll(parseNestedFunction(piece));
         }
         //System.out.println("ALL CANDIDATES: " + allCandidates);
         for (int i = 0; i < allCandidates.size(); i++) {
-            if (allCandidates.get(i).isNumber() || allCandidates.get(i).equals(var) || allCandidates.get(i).equals(CALC.MULTIPLY.createFunction(var, CALC.NEG_ONE))) {
+            CalcObject test = allCandidates.get(i);
+            if (test.isNumber() || test.equals(var)
+                    || test.equals(CALC.MULTIPLY.createFunction(var, CALC.NEG_ONE)) || testConstantMult(test)) {
                 allCandidates.remove(i);
                 i--;
             }
         }
+        for (int i = 0; i < allCandidates.size(); i++) {
+            for (int j = i + 1; j < allCandidates.size(); j++) {
+                CalcObject test = allCandidates.get(i);
+                CalcObject check = allCandidates.get(j);
+                if (test.equals(check)) {
+                    //System.out.println("KILLING: " + test);
+                    allCandidates.remove(j);
+                    j--;
+                }
+            }
+        }
+        //System.out.println("ALL CANDIDATES FILTERED: " + allCandidates);
         for (CalcObject testU : allCandidates) {
             //System.out.println("U IS: " + testU.toString());
             CalcObject diffTestU = CALC.SYM_EVAL(CALC.DIFF.createFunction(testU, var));
+            //System.out.println("DIFF RESULT: " + diffTestU.toString());
             CalcObject testDiv = CALC.SYM_EVAL(CALC.MULTIPLY.createFunction(input, CALC.POWER.createFunction(diffTestU, CALC.NEG_ONE)));
-            CalcParser parser = new CalcParser();
             //System.out.println("RESULT: " + testDiv.toString());
             testDiv = CALC.SYM_EVAL(CALC.SIMPLIFY.createFunction(testDiv));
             //System.out.println("RESULT SIMPLIFIED: " + testDiv.toString());
@@ -233,6 +264,7 @@ public class CalcINT implements CalcFunctionEvaluator {
             //System.out.println("REPLACED: " + testResult);
             if (!testResult.contains(var.toString())) {
                 try {
+                    CalcParser parser = new CalcParser();
                     CalcObject[] uSub = new CalcObject[2];
                     CalcObject result = CALC.SYM_EVAL(parser.parse(testResult.toString().replace("VARIABLE", var.toString())));
                     uSub[0] = result;
@@ -252,16 +284,24 @@ public class CalcINT implements CalcFunctionEvaluator {
             CalcSymbol header = function.getHeader();
             ArrayList<CalcObject> funcParts = giveList(header, function);
             if (header.equals(CALC.POWER)) {
+                //System.out.println("THE LIST SHIT: " + funcParts);
                 ArrayList<CalcObject> temp = new ArrayList<>();
-                for (int i = 0; i < funcParts.size(); i++) {
-                    temp.add(combinePowers(funcParts.subList(i, funcParts.size())));
+                temp.add(func);
+                for (int i = 1; i < funcParts.size(); i++) {
+                    CalcObject toAdd = combinePowers(funcParts.subList(i, funcParts.size()));
+                    temp.add(toAdd);
+                    list.addAll(parseNestedFunction(toAdd));
+                    //System.out.println("WTF: " + temp);
+
                 }
                 funcParts.addAll(temp);
                 list.addAll(funcParts);
             } else {
                 list.add(func);
+                //System.out.println("MAYBE THIS IS MULTIPLICATION? " + func);
                 for (int i = 0; i < funcParts.size(); i++) {
                     CalcObject firstObj = funcParts.get(i);
+                    //System.out.println("MAYBE NOT? " + firstObj);
                     list.addAll(parseNestedFunction(firstObj));
                 }
             }
@@ -280,5 +320,15 @@ public class CalcINT implements CalcFunctionEvaluator {
             power = CALC.POWER.createFunction(power, list.get(i));
         }
         return power;
+    }
+
+    private boolean testConstantMult(CalcObject input) {
+        ArrayList<CalcObject> parts = giveList(CALC.MULTIPLY, input);
+        if (parts.size() == 2) {
+            if (parts.get(0).isNumber() && parts.get(1) instanceof CalcSymbol) {
+                return true;
+            }
+        }
+        return false;
     }
 }

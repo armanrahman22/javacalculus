@@ -20,18 +20,14 @@ public class CalcFACTOR implements CalcFunctionEvaluator {
     public CalcObject evaluate(CalcFunction input) {
         if (input.size() == 1) {
             CalcObject obj = input.get(0);
-            //Simplify object before expanding (combine fractions)
-            //obj = CALC.SYM_EVAL(CALC.SIMPLIFY.createFunction(obj));
-            //System.out.println("ARE WE EVEN HERE?");
-            //if (obj.getHeader().equals(CALC.MULTIPLY) && ((CalcFunction) obj).size() > 1) { //	FACTOR(y1*y2*...) = FACTOR(y1) + FACTOR(y2) + ...
-            //    System.out.println("List style");
-            //    CalcFunction function = (CalcFunction) obj;
-            //    CalcObject second = ((CalcFunction) obj).get(1);
-            //    return CALC.MULTIPLY.createFunction(factor(function.get(0)), factor(second));
-            //} else {
-            //    System.out.println("not a list");
-                return factor(obj);
-            //}
+            ArrayList<CalcObject> allParts = giveList(CALC.MULTIPLY, obj);
+            CalcObject result = CALC.ONE;
+            for (CalcObject temp : allParts) {
+                //System.out.println(result);
+                result = CALC.MULTIPLY.createFunction(result, factor(temp));
+            }
+            //System.out.println(result);
+            return CALC.SYM_EVAL(result);
         } else {
             throw new CalcWrongParametersException("FACTOR -> wrong number of parameters");
         }

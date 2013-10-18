@@ -19,17 +19,17 @@ import javacalculus.struct.*;
  * @author Seva Luchianov
  */
 public class CalcINT implements CalcFunctionEvaluator {
-
+    
     public int recDepth;
-
+    
     public CalcINT() {
         recDepth = 0;
     }
-
+    
     public CalcINT(int recDepth) {
         this.recDepth = recDepth;
     }
-
+    
     @Override
     public CalcObject evaluate(CalcFunction function) {
         if (function.size() == 2) {	//case INT(function, variable)
@@ -43,7 +43,7 @@ public class CalcINT implements CalcFunctionEvaluator {
             throw new CalcWrongParametersException("INT -> wrong number of parameters");
         }
     }
-
+    
     public CalcObject integrate(CalcObject object, CalcSymbol var) {
         CalcObject obj = object;
         if (obj instanceof CalcFunction) { //input f(x..xn)
@@ -91,7 +91,7 @@ public class CalcINT implements CalcFunctionEvaluator {
                 CalcObject expanded = CALC.SYM_EVAL(CALC.EXPAND.createFunction(obj));
                 if (obj.equals(expanded)) {
                     if (CALC.full_integrate_mode && recDepth < CALC.max_recursion_depth) {
-                        CalcINTBYPARTS temp = new CalcINTBYPARTS(recDepth+1);
+                        CalcINTBYPARTS temp = new CalcINTBYPARTS(recDepth + 1);
                         //System.out.println("GOING HARD MODE");
                         return CALC.SYM_EVAL(temp.integrate(obj, var));
                     } else {
@@ -100,11 +100,11 @@ public class CalcINT implements CalcFunctionEvaluator {
                     }
                 } else {
                     //////System.out.println(recDepth);
-                    CalcINT tempInt = new CalcINT(recDepth+1);
+                    CalcINT tempInt = new CalcINT(recDepth + 1);
                     CalcObject answer = CALC.SYM_EVAL(tempInt.integrate(expanded, var));
                     if (answer instanceof CalcError) {
                         if (CALC.full_integrate_mode && recDepth < CALC.max_recursion_depth) {
-                            CalcINTBYPARTS temp = new CalcINTBYPARTS(recDepth+1);
+                            CalcINTBYPARTS temp = new CalcINTBYPARTS(recDepth + 1);
                             //System.out.println("EXPANSION BRANCH GOING HARD MODE");
                             return CALC.SYM_EVAL(temp.integrate(obj, var));
                         } else {
@@ -152,9 +152,13 @@ public class CalcINT implements CalcFunctionEvaluator {
             }
         }
         if (obj.getHeader().equals(CALC.LN)) {	//	INT(LN(x),x) = x*LN(x) - x
-            return CALC.ADD.createFunction(
-                    CALC.MULTIPLY.createFunction(var, obj),
-                    CALC.MULTIPLY.createFunction(var, CALC.NEG_ONE));
+            CalcFunction function = (CalcFunction) obj;
+            CalcObject firstObj = function.get(0);
+            if (firstObj.equals(var)) {
+                return CALC.ADD.createFunction(
+                        CALC.MULTIPLY.createFunction(var, obj),
+                        CALC.MULTIPLY.createFunction(var, CALC.NEG_ONE));
+            }
         }
         if (obj.getHeader().equals(CALC.SIN)) {	//	INT(SIN(x),x) = -COS(x)
             CalcFunction function = (CalcFunction) obj;
@@ -192,13 +196,13 @@ public class CalcINT implements CalcFunctionEvaluator {
         return CALC.ERROR;
         //return obj;
     }
-
+    
     private boolean superEquals(CalcObject first, CalcObject second) {
         CalcObject firstObj = CALC.SYM_EVAL(CALC.EXPAND.createFunction(first));
         CalcObject secondObj = CALC.SYM_EVAL(CALC.EXPAND.createFunction(second));
         return firstObj.equals(secondObj);
     }
-
+    
     private ArrayList<CalcObject> giveList(CalcSymbol operator, CalcObject func) {
         ArrayList<CalcObject> list = new ArrayList<>();
         //////System.out.println(func);
@@ -217,7 +221,7 @@ public class CalcINT implements CalcFunctionEvaluator {
         }
         return list;
     }
-
+    
     private CalcObject[] parseU(CalcObject input, CalcSymbol var) //First bucket contains new function, second contains u subbed piece
     {
         if (!(input instanceof CalcFunction)) {
@@ -276,7 +280,7 @@ public class CalcINT implements CalcFunctionEvaluator {
         }
         return null;
     }
-
+    
     private ArrayList<CalcObject> parseNestedFunction(CalcObject func) {
         ArrayList<CalcObject> list = new ArrayList<>();
         if (func instanceof CalcFunction) {
@@ -292,7 +296,7 @@ public class CalcINT implements CalcFunctionEvaluator {
                     temp.add(toAdd);
                     list.addAll(parseNestedFunction(toAdd));
                     //System.out.println("WTF: " + temp);
-
+                    
                 }
                 funcParts.addAll(temp);
                 list.addAll(funcParts);
@@ -310,7 +314,7 @@ public class CalcINT implements CalcFunctionEvaluator {
         }
         return list;
     }
-
+    
     private CalcObject combinePowers(List<CalcObject> list) {
         if (list == null) {
             return null;
@@ -321,7 +325,7 @@ public class CalcINT implements CalcFunctionEvaluator {
         }
         return power;
     }
-
+    
     private boolean testConstantMult(CalcObject input) {
         ArrayList<CalcObject> parts = giveList(CALC.MULTIPLY, input);
         if (parts.size() == 2) {

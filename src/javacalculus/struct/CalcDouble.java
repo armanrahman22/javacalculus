@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 
 import javacalculus.core.CALC;
 import javacalculus.exception.CalcUnsupportedException;
+import java.io.Serializable;
 
 /**
  *
@@ -14,7 +15,7 @@ import javacalculus.exception.CalcUnsupportedException;
  * @see java.math.BigDecimal
  *
  */
-public class CalcDouble implements CalcObject {
+public class CalcDouble implements CalcObject, Serializable{
 
     private BigDecimal value;
     private boolean isPositiveInfinity = false;

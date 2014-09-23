@@ -58,6 +58,10 @@
                 CalcSymbol.OPERATOR);
         public static final CalcSymbol SIMPLIFY = new CalcSymbol("SIMPLIFY", new CalcSIMPLIFY(),
                 CalcSymbol.OPERATOR);
+        public static final CalcSymbol TRIGSIMPLIFY = new CalcSymbol("TRIGSIMPLIFY", new CalcTRIGSIMPLIFY(),
+            CalcSymbol.OPERATOR);
+        public static final CalcSymbol TRIGEXPAND = new CalcSymbol("TRIGEXPAND", new CalcTRIGEXPAND(),
+            CalcSymbol.OPERATOR);
         public static final CalcSymbol FACTOR = new CalcSymbol("FACTOR", new CalcFACTOR(),
                 CalcSymbol.OPERATOR);
         public static final CalcSymbol TEST = new CalcSymbol("TEST", new CalcTEST(),
@@ -319,6 +323,10 @@
                 return (CalcSymbol) DEPTH.clone();
             } else if (identifier.equals("SIMPLIFY")) {
                 return (CalcSymbol) SIMPLIFY.clone();
+            } else if (identifier.equals("TRIGSIMPLIFY")) {
+                return (CalcSymbol) TRIGSIMPLIFY.clone();
+            } else if (identifier.equals("TRIGEXPAND")) {
+                return (CalcSymbol) TRIGEXPAND.clone();
             } else if (identifier.equals("FACTOR")) {
                 return (CalcSymbol) FACTOR.clone();
             } else if (identifier.equals("TEST")) {

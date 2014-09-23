@@ -49,10 +49,13 @@ public class CalcFACTORIAL extends Calc1ParamFunctionEvaluator implements CalcOp
 	}
 
 	@Override
-	protected CalcObject evaluateSymbol(CalcSymbol input) {
-		//cannot evaluate symbols, so just return the original function
-		return CALC.FACTORIAL.createFunction(input);
-	}
+    protected CalcObject evaluateSymbol(CalcSymbol input) {
+        //cannot evaluate symbols, so just return the original function
+        if (input.equals(CALC.ERROR)) {
+            return CALC.ERROR;
+        }
+        return CALC.FACTORIAL.createFunction(input);
+    }
 
 
 	public CalcInteger factorial(CalcInteger input) {

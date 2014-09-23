@@ -10,6 +10,7 @@ import java.util.Iterator;
 import javacalculus.core.CALC;
 import javacalculus.evaluator.extend.CalcFunctionEvaluator;
 import javacalculus.evaluator.extend.CalcOperatorEvaluator;
+import java.io.Serializable;
 
 
 /**
@@ -26,7 +27,7 @@ import javacalculus.evaluator.extend.CalcOperatorEvaluator;
  *
  */
 
-public class CalcFunction implements CalcObject, Iterable<CalcObject> {
+public class CalcFunction implements CalcObject, Iterable<CalcObject>, Serializable {
 	
 	/**
 	 * Property constants

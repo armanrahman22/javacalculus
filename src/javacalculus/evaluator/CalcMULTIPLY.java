@@ -132,6 +132,9 @@ public class CalcMULTIPLY extends CalcNParamFunctionEvaluator implements CalcOpe
 
     @Override
     protected CalcObject evaluateSymbol(CalcSymbol input1, CalcSymbol input2) {
+        if (input1.equals(CALC.ERROR) || input2.equals(CALC.ERROR)) {
+            return CALC.ERROR;
+        }
         return null;
     }
 

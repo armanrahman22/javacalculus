@@ -136,10 +136,13 @@ public class CalcPOWER extends Calc2ParamFunctionEvaluator implements CalcOperat
 	}
 
 	@Override
-	protected CalcObject evaluateSymbol(CalcSymbol input1, CalcSymbol input2) {
-		return null;
-	}
-
+    protected CalcObject evaluateSymbol(CalcSymbol input1, CalcSymbol input2) {
+        if (input1.equals(CALC.ERROR)|| input2.equals(CALC.ERROR)) {
+            return CALC.ERROR;
+        }
+        return null;
+    }
+    
 	@Override
 	public int getPrecedence() {
 		return 9001; //it's OVER 9000!!!!!!

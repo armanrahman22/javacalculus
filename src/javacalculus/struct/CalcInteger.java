@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import javacalculus.core.CALC;
 import javacalculus.exception.CalcArithmeticException;
 import javacalculus.exception.CalcUnsupportedException;
+import java.io.Serializable;
 
 /**
  * Hierarchially encapsulates the java integer. BigInteger is used as the medium
@@ -14,7 +15,7 @@ import javacalculus.exception.CalcUnsupportedException;
  *  
  *
  */
-public class CalcInteger implements CalcObject {
+public class CalcInteger implements CalcObject, Serializable {
 	private BigInteger value;
 	
 	public CalcInteger(int in) {

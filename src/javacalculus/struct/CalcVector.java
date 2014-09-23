@@ -7,6 +7,7 @@ import javacalculus.exception.CalcDimensionException;
 import javacalculus.struct.CalcFunction;
 import javacalculus.struct.CalcObject;
 import javacalculus.struct.CalcSymbol;
+import java.io.Serializable;
 
 /**
  * @author Duyun Chen <A HREF="mailto:duchen@seas.upenn.edu">[duchen@seas.upenn.edu]</A>,
@@ -14,7 +15,7 @@ import javacalculus.struct.CalcSymbol;
  *  
  *
  */
-public class CalcVector implements CalcObject {
+public class CalcVector implements CalcObject, Serializable {
 	
 	private CalcObject[] elements;
 	private static final char VECTOR_OPEN = '[';

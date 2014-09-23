@@ -3,6 +3,7 @@ package javacalculus.struct;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import javacalculus.core.CALC;
+import java.io.Serializable;
 
 /**
  * 
@@ -11,7 +12,7 @@ import javacalculus.core.CALC;
  *  
  *
  */
-public class CalcFraction implements CalcObject {
+public class CalcFraction implements CalcObject, Serializable {
 
 	private BigInteger numerator;
 	private BigInteger denominator;

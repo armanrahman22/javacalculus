@@ -9,6 +9,7 @@ import javacalculus.struct.CalcMatrix;
 import javacalculus.struct.CalcObject;
 import javacalculus.struct.CalcSymbol;
 import javacalculus.struct.CalcVector;
+import java.io.Serializable;
 
 /**
  * Abstract definition of a function evaluator that takes in exactly two parameters.
@@ -18,7 +19,7 @@ import javacalculus.struct.CalcVector;
  *  
  *
  */
-public abstract class Calc2ParamFunctionEvaluator implements CalcFunctionEvaluator {
+public abstract class Calc2ParamFunctionEvaluator implements CalcFunctionEvaluator, Serializable {
 
 	@Override
 	public CalcObject evaluate(CalcFunction input) {

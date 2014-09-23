@@ -1,8 +1,9 @@
 package javacalculus.struct;
 
 import javacalculus.core.CALC;
+import java.io.Serializable;
 
-public class CalcSub implements CalcObject {
+public class CalcSub implements CalcObject, Serializable {
 
     @Override
     public boolean equals(Object obj) {

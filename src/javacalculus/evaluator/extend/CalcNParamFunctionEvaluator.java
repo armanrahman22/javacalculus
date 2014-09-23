@@ -1,6 +1,7 @@
 package javacalculus.evaluator.extend;
 
 import javacalculus.struct.*;
+import java.io.Serializable;
 
 /**
  * Abstract definition of a function evaluator that takes in an arbitrary number of parameters.
@@ -10,7 +11,7 @@ import javacalculus.struct.*;
  *  
  *
  */
-public abstract class CalcNParamFunctionEvaluator extends Calc2ParamFunctionEvaluator {
+public abstract class CalcNParamFunctionEvaluator extends Calc2ParamFunctionEvaluator implements Serializable {
 	@Override
 	public CalcObject evaluate(CalcFunction input) {
 		if (input.size() == 2) {

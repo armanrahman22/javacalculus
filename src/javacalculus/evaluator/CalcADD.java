@@ -122,9 +122,12 @@ public class CalcADD extends CalcNParamFunctionEvaluator implements CalcOperator
 	}
 
 	@Override
-	protected CalcObject evaluateSymbol(CalcSymbol input1, CalcSymbol input2) {
-		return null;
-	}
+    protected CalcObject evaluateSymbol(CalcSymbol input1, CalcSymbol input2) {
+        if (input1.equals(CALC.ERROR) || input2.equals(CALC.ERROR)) {
+            return CALC.ERROR;
+        }
+        return null;
+    }
 
 	@Override
 	public int getPrecedence() {

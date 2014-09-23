@@ -70,9 +70,12 @@ public class CalcCOS extends Calc1ParamFunctionEvaluator {
 	}
 
 	@Override
-	protected CalcObject evaluateSymbol(CalcSymbol input) {
-		//cannot evaluate symbols, so just return the original function
-		return CALC.COS.createFunction(input);
-	}
+    protected CalcObject evaluateSymbol(CalcSymbol input) {
+        if (input.equals(CALC.ERROR)) {
+            return CALC.ERROR;
+        }
+        //cannot evaluate symbols, so just return the original function
+        return CALC.COS.createFunction(input);
+    }
 
 }

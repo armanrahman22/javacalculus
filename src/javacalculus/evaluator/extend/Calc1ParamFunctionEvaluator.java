@@ -2,6 +2,7 @@ package javacalculus.evaluator.extend;
 
 import javacalculus.core.CALC;
 import javacalculus.struct.*;
+import java.io.Serializable;
 
 /**
  * Abstract definition of a function evaluator that takes in one parameter.
@@ -11,7 +12,7 @@ import javacalculus.struct.*;
  *  
  *
  */
-public abstract class Calc1ParamFunctionEvaluator implements CalcFunctionEvaluator {
+public abstract class Calc1ParamFunctionEvaluator implements CalcFunctionEvaluator, Serializable{
 
 	@Override
 	public CalcObject evaluate(CalcFunction input) {

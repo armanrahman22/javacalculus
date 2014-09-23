@@ -5,6 +5,7 @@ package javacalculus.struct;
 
 import javacalculus.core.CALC;
 import javacalculus.exception.CalcDimensionException;
+import java.io.Serializable;
 
 /**
  * @author Duyun Chen <A HREF="mailto:duchen@seas.upenn.edu">[duchen@seas.upenn.edu]</A>,
@@ -12,7 +13,7 @@ import javacalculus.exception.CalcDimensionException;
  *  
  *
  */
-public class CalcMatrix implements CalcObject {
+public class CalcMatrix implements CalcObject, Serializable{
 	
 	private CalcVector[] elements;
 	private int width = 0, height = 0;

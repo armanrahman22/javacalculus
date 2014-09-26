@@ -3,10 +3,8 @@ package javacalculus.evaluator;
 import java.util.ArrayList;
 import java.util.List;
 import javacalculus.core.CALC;
-import javacalculus.core.CalcParser;
 import javacalculus.core.DeepCopy;
 import javacalculus.evaluator.extend.CalcFunctionEvaluator;
-import javacalculus.exception.CalcSyntaxException;
 import javacalculus.exception.CalcWrongParametersException;
 import javacalculus.struct.*;
 
@@ -37,7 +35,7 @@ public class CalcINT implements CalcFunctionEvaluator {
     }
 
     public CalcObject integrate(CalcObject object, CalcSymbol var) {
-        ////System.out.println("ATTEMPTING TO INTEGRATE " + object.toString());
+        //System.out.println("ATTEMPTING TO INTEGRATE " + object.toString());
         CalcObject obj = object;
         if (obj instanceof CalcFunction) { //input f(x..xn)
             ////////System.out.println("FINNA EVAL THAT OBJ");
@@ -66,7 +64,7 @@ public class CalcINT implements CalcFunctionEvaluator {
             CalcFunction functionB = new CalcFunction(CALC.ADD, function, 1, function.size());
             return CALC.ADD.createFunction(integrate(function.get(0), var), integrate(functionB, var));
         }
-        if (obj.getHeader().equals(CALC.MULTIPLY)) {	//INT(c*f(x),x) = c*INT(f(x),x)
+        if (obj.getHeader().equals(CALC.MULTIPLY) || obj.getHeader().equals(CALC.POWER) && ((CalcFunction) obj).get(0).getHeader().equals(CALC.LN)) {	//INT(c*f(x),x) = c*INT(f(x),x)
             ////////System.out.println("INTEGRATING MULTIPLY");
             CalcFunction function = new CalcFunction(CALC.MULTIPLY);
             function.addAll((CalcFunction) obj);
@@ -80,22 +78,22 @@ public class CalcINT implements CalcFunctionEvaluator {
                 //SEC(x)*TAN(x) => SEC(x)
                 //CSC(x)*COT(x) => -CSC(x)
                 //CalcObject tempx = (CalcObject) DeepCopy.copy(obj);
-                
+
                 //WHAT THE FUCK IS THIS
-                
-                CalcObject wtf;
-                CalcParser p = new CalcParser();
-                try {
-                    wtf = p.parse(obj.toString());
-                } catch (CalcSyntaxException ex) {
-                    return CALC.ERROR;
-                }
-                CalcObject expanded = CALC.SYM_EVAL(CALC.EXPAND.createFunction(wtf));
+                /*CalcObject wtf;
+                 CalcParser p = new CalcParser();
+                 try {
+                 wtf = p.parse(obj.toString());
+                 } catch (CalcSyntaxException ex) {
+                 return CALC.ERROR;
+                 }*/
+                //CalcObject expanded = CALC.SYM_EVAL(CALC.EXPAND.createFunction(wtf));
+                //System.out.println("LETS EXPAND " + obj);
+                CalcObject expanded = CALC.SYM_EVAL(CALC.EXPAND.createFunction(obj));
                 //System.out.println(wtf);
                 //System.out.println("IN MULTIPLICATION, " + obj + " AND EXPANDED " + expanded);
-                
+
                 //LIKE WHAT THE ACTUAL FUCK
-                
                 if (obj.equals(expanded)) {
                     //System.out.println("NOT EXPANSION BRANCH");
                     if (CALC.full_integrate_mode && recDepth < CALC.max_recursion_depth) {
@@ -127,6 +125,17 @@ public class CalcINT implements CalcFunctionEvaluator {
                 }
             }
         }
+        //try parts here instead NO
+        /*{
+         System.out.println("WE ARE HERE");
+         if (CALC.full_integrate_mode && recDepth < CALC.max_recursion_depth) {
+         CalcObject temp = CALC.SYM_EVAL(new CalcINTBYPARTS(recDepth + 1).integrate(object, var));
+         System.out.println("GOING HARD MODE");
+         if (temp != null && !temp.equals(CALC.ERROR)) {
+         return temp;
+         }
+         }
+         }*/
         if (obj.getHeader().equals(CALC.POWER)) { //this part is probably trickiest (form f(x)^g(x)). A lot of integrals here does not evaluate into elementary functions
             ////////System.out.println("INTEGRATING POWER");
             CalcFunction function = (CalcFunction) obj;
@@ -353,10 +362,10 @@ public class CalcINT implements CalcFunctionEvaluator {
             return CALC.ERROR;
         }
         ArrayList<CalcObject> toIntegrate = new ArrayList<>();
-        CalcINT subIntegrator = new CalcINT(recDepth);
         CalcObject[] sub = doUSub(input, var);
         if (sub != null) {
-            //System.out.println("Sub did not fail for " + sub[1]);
+            //System.out.println("uSub Func: " + sub[0] + " Sub: " + sub[1]);
+            CalcINT subIntegrator = new CalcINT(recDepth + 1);
             CalcObject intResult = CALC.SYM_EVAL(subIntegrator.integrate(sub[0], var));
             intResult = substitute(intResult, var, sub[1]);
             //System.out.println("INT RESULT: " + intResult);
@@ -370,7 +379,7 @@ public class CalcINT implements CalcFunctionEvaluator {
             CalcINT trigIntegrator = new CalcINT(recDepth + 1);
             CalcObject answer = CALC.SYM_EVAL(trigIntegrator.integrate((CalcObject) DeepCopy.copy(trigSubbed), var));
             if (!answer.equals(CALC.ERROR)) {
-                //System.out.println("NO ERROR IN TRIG SUB: " + answer);
+                //System.out.println("Trig Func: " + trigSubbed + " Int: " + answer);
                 return answer;
             }
         }
@@ -378,8 +387,9 @@ public class CalcINT implements CalcFunctionEvaluator {
         for (CalcObject test : toIntegrate) {
             sub = doUSub(test, var);
             if (sub != null) {
-                //System.out.println("TRIG -uSub did not fail");
-                CalcObject intResult = CALC.SYM_EVAL(subIntegrator.integrate(sub[0], var));
+                //System.out.println("Trig-uSub Func: " + sub[0] + " Sub: " + sub[1]);
+                CalcINT trigIntegrator = new CalcINT(recDepth + 1);
+                CalcObject intResult = CALC.SYM_EVAL(trigIntegrator.integrate(sub[0], var));
                 intResult = substitute(intResult, var, sub[1]);
                 //System.out.println("INT RESULT: " + intResult);
                 return intResult;

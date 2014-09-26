@@ -5,6 +5,7 @@ import java.util.Iterator;
 import javacalculus.core.CALC;
 import javacalculus.evaluator.extend.CalcFunctionEvaluator;
 import javacalculus.exception.CalcWrongParametersException;
+import javacalculus.struct.CalcDouble;
 import javacalculus.struct.CalcFunction;
 import javacalculus.struct.CalcInteger;
 import javacalculus.struct.CalcObject;
@@ -49,43 +50,58 @@ public class CalcEXPAND implements CalcFunctionEvaluator {
         if (obj.getHeader().equals(CALC.POWER)) {
             CalcFunction function = (CalcFunction) obj;
             CalcObject firstObj = CALC.SYM_EVAL(function.get(0));
-            CalcObject secondObj = CALC.SYM_EVAL(function.get(1));
-            //System.out.println("This is a function in the power branch: " + function);
-            if (firstObj instanceof CalcFunction && secondObj.isNumber() && secondObj instanceof CalcInteger) {//f(x)^k
-                int pow = ((CalcInteger) secondObj).intValue();
-                boolean isPowNegative = pow < 0;
-                //System.out.println("WE ARE IN THE f(x)^k branch");
-                if (isPowNegative) {
-                    //System.out.println("OH SNAP, this is the bottom part of a fraction!");
-                    pow = Math.abs(pow);
-                }
-                if (pow == 1) {
-                    return obj;
-                }
-                ArrayList<CalcObject> resultFunc = new ArrayList<>();
-                //System.out.println("This is the first part of the function " + firstObj);
-                //System.out.println("This is the second part of the function " + secondObj);
-                if (firstObj.getHeader().equals(CALC.ADD)) {
-                    Iterator iter = ((CalcFunction) firstObj).iterator();
-                    while (iter.hasNext()) {
-                        resultFunc.add(CALC.SYM_EVAL(CALC.EXPAND.createFunction(CALC.MULTIPLY.createFunction((CalcObject) iter.next(), firstObj))));
-                    }
+            CalcObject secondObjTemp = CALC.SYM_EVAL(function.get(1));
+            CalcInteger secondObj = null;
+            if (secondObjTemp.isNumber()) {
+                if (secondObjTemp instanceof CalcInteger) {
+                    secondObj = (CalcInteger) secondObjTemp;
                 } else {
-                    //System.out.println("not adding: " + firstObj);
-                    return obj;
+                    CalcDouble temp = (CalcDouble) secondObjTemp;
+                    if (temp.isInteger()) {
+                        //CalcDouble
+                        secondObj = new CalcInteger(((CalcDouble) secondObjTemp).bigDecimalValue().toBigInteger());
+                    }
                 }
-                ////System.err.println(resultFunc);
-                for (CalcObject temp : resultFunc) {
-                    factored = CALC.SYM_EVAL(CALC.ADD.createFunction(factored, temp));
+                //System.out.println("This is a function in the power branch: " + function);
+                if (secondObj != null && firstObj instanceof CalcFunction) {//f(x)^k
+                    int pow = ((CalcInteger) secondObj).intValue();
+                    boolean isPowNegative = pow < 0;
+                    //System.out.println("WE ARE IN THE f(x)^k branch");
+                    if (isPowNegative) {
+                        //System.out.println("OH SNAP, this is the bottom part of a fraction!");
+                        pow = Math.abs(pow);
+                    }
+                    if (pow == 1) {
+                        return obj;
+                    }
+                    ArrayList<CalcObject> resultFunc = new ArrayList<>();
+                    //System.out.println("This is the first part of the function " + firstObj);
+                    //System.out.println("This is the second part of the function " + secondObj);
+                    if (firstObj.getHeader().equals(CALC.ADD)) {
+                        Iterator iter = ((CalcFunction) firstObj).iterator();
+                        while (iter.hasNext()) {
+                            resultFunc.add(CALC.SYM_EVAL(CALC.EXPAND.createFunction(CALC.MULTIPLY.createFunction((CalcObject) iter.next(), firstObj))));
+                        }
+                    } else {
+                        //System.out.println("not adding: " + firstObj);
+                        return obj;
+                    }
+                    ////System.err.println(resultFunc);
+                    for (CalcObject temp : resultFunc) {
+                        factored = CALC.SYM_EVAL(CALC.ADD.createFunction(factored, temp));
+                    }
+                    for (int i = 0; i < pow - 2; i++) {
+                        factored = CALC.SYM_EVAL(CALC.EXPAND.createFunction(CALC.MULTIPLY.createFunction(firstObj, factored)));
+                    }
+                    if (isPowNegative) {
+                        factored = CALC.POWER.createFunction(factored, CALC.NEG_ONE);
+                    }
+                    //System.out.println("RESULT of f(x)^k: " + factored);
+                    return factored;
+                } else {
+                    //System.out.println("SECOND NUM" + secondObj.getHeader());
+                    //System.out.println((firstObj instanceof CalcFunction) + " && " + (secondObj.isNumber()) + " && " + (secondObj instanceof CalcInteger));
                 }
-                for (int i = 0; i < pow - 2; i++) {
-                    factored = CALC.SYM_EVAL(CALC.EXPAND.createFunction(CALC.MULTIPLY.createFunction(firstObj, factored)));
-                }
-                if (isPowNegative) {
-                    factored = CALC.POWER.createFunction(factored, CALC.NEG_ONE);
-                }
-                //System.out.println("RESULT of f(x)^k: " + factored);
-                return factored;
             }
         } else if (obj.getHeader().equals(CALC.MULTIPLY)) {
             ArrayList<CalcObject> allParts = giveList(CALC.MULTIPLY, obj);
@@ -144,6 +160,8 @@ public class CalcEXPAND implements CalcFunctionEvaluator {
                 //System.out.println("RESULT of g(x)*f(x): " + factored + "\n" + CALC.SYM_EVAL(factored));
                 return factored;
             }
+        } else {
+            //System.out.println("NOPE");
         }
         return obj;
     }
@@ -153,13 +171,11 @@ public class CalcEXPAND implements CalcFunctionEvaluator {
         ////System.out.println(func);
         if (func instanceof CalcFunction && func.getHeader().equals(operator)) {
             ArrayList<CalcObject> funcParts = ((CalcFunction) func).getAll();
-            for (int i = 0; i < funcParts.size(); i++) {
-                CalcObject firstObj = funcParts.get(i);
+            for (CalcObject firstObj : funcParts) {
                 //if (firstObj instanceof CalcFunction && ((CalcFunction) firstObj).getHeader().equals(operator)) {
                 list.addAll(giveList(operator, firstObj));
                 //}
             }
-            ////System.out.println("LIST in loop" + list);
         } else {
             list.add(func);
             ////System.out.println("LIST" + list);
